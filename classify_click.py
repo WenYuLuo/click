@@ -97,6 +97,68 @@ def load_data(data_path, n_class, batch_num=20, n_total=500):
     return train_xs, train_ys, test_xs, test_ys
 
 
+def load_lwy_data(batch_num=20, n_total=500):
+
+    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/TestData/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/TestData/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/TestData/Gg/Rissos_(Grampus_grisieus)"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/TestData/Tt/palmyra2006"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/TestData/Dc/Dc"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/TestData/Dd/Dd"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/TestData/Melon/palmyra2006"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/TestData/Spinner/palmyra2006"
+
+    n_class = len(dict)
+    train_xs = np.empty((0, 192))
+    train_ys = np.empty((0, n_class))
+    test_xs = np.empty((0, 192))
+    test_ys = np.empty((0, n_class))
+
+    for key in dict:
+        # path = "%(path)s/%(class)d" % {'path': data_path, 'class': c}
+        path = dict[key]
+        c = int(key)
+        wav_files = find_click.list_wav_files(path)
+
+        print("load data : %s, the number of files : %d, class: %d" % (path, len(wav_files), c))
+
+        label = np.zeros(n_class)
+        label[c] = 1
+
+        # xs = np.empty((0, 256))
+        xs = np.empty((0, 320))
+        count = 0
+        #
+        for pathname in wav_files:
+            wave_data, frame_rate = find_click.read_wav_file(pathname)
+
+            energy = np.sqrt(np.sum(wave_data ** 2))
+            wave_data /= energy
+            wave_data = np.reshape(wave_data, [-1])
+            xs = np.vstack((xs, wave_data))
+            count += 1
+            if count >= batch_num * n_total:
+                break
+
+        xs0, xs1 = split_data(xs)
+
+        temp_train_xs = random_crop(xs0, batch_num, int(n_total * 4 / 5))
+        temp_test_xs = random_crop(xs1, batch_num, int(n_total / 5))
+
+        temp_train_ys = np.tile(label, (temp_train_xs.shape[0], 1))
+        temp_test_ys = np.tile(label, (temp_test_xs.shape[0], 1))
+
+        train_xs = np.vstack((train_xs, temp_train_xs))
+        train_ys = np.vstack((train_ys, temp_train_ys))
+        test_xs = np.vstack((test_xs, temp_test_xs))
+        test_ys = np.vstack((test_ys, temp_test_ys))
+
+    return train_xs, train_ys, test_xs, test_ys
+
+
 def shufflelists(xs, ys, num):
     shape = xs.shape
     ri = np.random.permutation(shape[0])
@@ -114,7 +176,8 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     print("train cnn for one click ... ...")
 
-    train_xs, train_ys, test_xs, test_ys = load_data(data_path, n_class, batch_num, n_total)
+    # train_xs, train_ys, test_xs, test_ys = load_data(data_path, n_class, batch_num, n_total)
+    train_xs, train_ys, test_xs, test_ys = load_lwy_data(batch_num, n_total)
 
     print(train_xs.shape)
     print(test_xs.shape)
@@ -166,15 +229,17 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     with tf.Session() as sess:
         sess.run(init)
-        for i in range(20000):
+        for i in range(50000):
             bxs, bys = shufflelists(train_xs, train_ys, 160)
             if (i + 1) % 1000 == 0:
-                print("step : %d, training accuracy : %g" %
-                      (i + 1, sess.run(accuracy, feed_dict={x: bxs, y_: bys, keep_prob: 1.0})))
+                step_acc = sess.run(accuracy, feed_dict={x: bxs, y_: bys, keep_prob: 1.0})
+                print("step : %d, training accuracy : %g" % (i + 1, step_acc))
+                if step_acc >= 0.99:
+                    break
 
             sess.run(train_step, feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
 
-        saver.save(sess, "params/cnn_net.ckpt")
+        saver.save(sess, "params/cnn_net_lwy.ckpt")
 
         # print("test accuracy : %g" % (sess.run(accuracy, feed_dict={x: test_xs, y_: test_ys, keep_prob: 1.0})))
         sample_num = test_xs.shape[0]
@@ -217,10 +282,149 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
 
 #
-def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
-
+def test_cnn_bottlenose_data(data_path, n_class=8, batch_num=20):
     click_batch = []
+    list_files = find_click.list_files(data_path)
+    if list_files == []:
+        list_files = list_files + [data_path]
+    c = 0  # the label of bottlenose is 3
+    for path in list_files:
+        # if path != './TestData/Dc/Dc':
+        #     continue
+        wav_files = find_click.list_wav_files(path)
+        print("load data : %s, the number of files : %d" % (path, len(wav_files)))
 
+        # 为避免训练网络用的Click用于测试, 类似于训练时区分训练和测试样本
+        #  利用全部样本后1/5的Click生成测试样本
+        xs = np.empty((0, 320))
+        count = 0
+        for pathname in wav_files:
+            count += 1
+            wave_data, frame_rate = find_click.read_wav_file(pathname)
+            energy = np.sqrt(np.sum(wave_data ** 2))
+            wave_data /= energy
+            wave_data = np.reshape(wave_data, [-1])
+            xs = np.vstack((xs, wave_data))
+
+        sample_num = xs.shape[0]
+        total_batch = int(sample_num / batch_num)
+        print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': path, 'd': total_batch})
+        for i in range(0, total_batch):
+            tmp_xs = np.empty((0, 192))
+            for j in range(batch_num * i, batch_num * (i + 1)):
+                index = j % sample_num
+                temp_x = xs[index]
+                beg_idx = np.random.randint(64, (64 + 32))
+                crop_x = temp_x[beg_idx:(beg_idx + 192)]
+                crop_x = np.reshape(crop_x, [1, 192])
+                tmp_xs = np.vstack((tmp_xs, crop_x))
+
+            label = [0] * n_class
+            label[c] = 1
+
+            label = np.array([[label]])
+            label = list(label)
+
+            tmp_xs = np.expand_dims(np.expand_dims(tmp_xs, axis=0), axis=0)
+            tmp_xs = list(tmp_xs)
+            sample = tmp_xs + label
+            click_batch.append(sample)
+
+    x = tf.placeholder("float", [None, 192])
+    # 输入
+    x_image = tf.reshape(x, [-1, 1, 192, 1])
+
+    # 第一个卷积层
+    W_conv1 = weight_variable([1, 5, 1, 32])
+    b_conv1 = bias_variable([32])
+    h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+    h_pool1 = max_pool_1x2(h_conv1)
+
+    # 第二个卷积层
+    W_conv2 = weight_variable([1, 5, 32, 32])
+    b_conv2 = bias_variable([32])
+    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+    h_pool2 = max_pool_1x2(h_conv2)
+
+    # 密集链接层
+    W_fc1 = weight_variable([1 * 48 * 32, 256])
+    b_fc1 = bias_variable([256])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 1 * 48 * 32])
+    h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+
+    # Dropout
+    keep_prob = tf.placeholder("float")
+    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob=keep_prob)
+
+    # 输出层
+    W_fc2 = weight_variable([256, n_class])
+    b_fc2 = bias_variable([n_class])
+    y = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
+
+    init = tf.global_variables_initializer()
+
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        sess.run(init)
+        saver.restore(sess, "params/cnn_net_lwy.ckpt")  # 加载训练好的网络参数
+
+        print('the number of batch:', len(click_batch))
+        count = 0
+        for i in range(len(click_batch)):
+            temp_xs = click_batch[i][0]
+            label = np.zeros(n_class)
+            for j in range(0, temp_xs.shape[1]):
+                txs = temp_xs[0, j, :]
+                txs = np.reshape(txs, [1, 192])
+                out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                pre_y = np.argmax(out_y, 1)
+                label[pre_y] += 1
+
+            ref_y = click_batch[i][1]
+            if np.equal(np.argmax(label), np.argmax(ref_y)):
+                count += 1
+
+        print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
+
+        count = 0
+        weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+        for i in range(len(click_batch)):
+            temp_xs = click_batch[i][0]
+            label = np.zeros(n_class)
+            for j in range(0, temp_xs.shape[1]):
+                txs = temp_xs[0, j, :]
+                txs = np.reshape(txs, [1, 192])
+                out = sess.run(weight, feed_dict={x: txs, keep_prob: 1.0})
+                out = np.reshape(out, label.shape)
+                label = label + out
+
+            ref_y = click_batch[i][1]
+            if np.equal(np.argmax(label), np.argmax(ref_y)):
+                count += 1
+
+        print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
+
+        count = 0
+        for i in range(len(click_batch)):
+            temp_xs = click_batch[i][0]
+            label = np.zeros(n_class)
+            for j in range(0, temp_xs.shape[1]):
+                txs = temp_xs[0, j, :]
+                txs = np.reshape(txs, [1, 192])
+                out = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                out = np.reshape(out, label.shape)
+                label = label + out
+
+            ref_y = click_batch[i][1]
+            if np.equal(np.argmax(label), np.argmax(ref_y)):
+                count += 1
+
+        print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
+
+
+def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
+    click_batch = []
     for c in range(0, n_class):
         path = "%(path)s/%(class)d" % {'path': data_path, 'class': c}
         wav_files = find_click.list_wav_files(path)
@@ -356,16 +560,19 @@ def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
 
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
 
-
 batch_num = 10
 n_class = 8
 n_total = 2000
+
 
 # train_cnn('./Data/Click', 3, 20, 200)
 # train_cnn('./Data/ClickC8', n_class, 20, 500)
 # exit()
 
-test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
+# test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
+
+train_cnn('./Data/ClickC8', n_class, 20, 500)
+# test_cnn_bottlenose_data('./TestData/Tt/palmyra2007', n_class, batch_num)
 
 
 

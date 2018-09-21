@@ -52,6 +52,16 @@ def list_wav_files(root_path):
     return list
 
 
+def list_files(root_path):
+    list_folder = []
+    for filename in os.listdir(root_path):
+        pathname = os.path.join(root_path, filename)
+        if os.path.isfile(pathname):
+            continue
+        list_folder = list_folder + [pathname]
+    return list_folder
+
+
 def find_click_fdr_tkeo(xn, fs, fl, fwhm, fdr_threshold, ns, snv_threshold = 10):
     if xn.ndim > 1:
         xn = xn[:, 0]
@@ -154,7 +164,7 @@ def find_click_fdr_tkeo(xn, fs, fl, fwhm, fdr_threshold, ns, snv_threshold = 10)
                 else:
                     break
 
-            while end_idx < len(fdr):
+            while end_idx < len(fdr)-1:
                 if fdr[end_idx+1] > 0.3:
                     end_idx += 1
                 else:
