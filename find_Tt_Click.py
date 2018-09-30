@@ -37,6 +37,8 @@ def detect_save_click(class_path, class_name):
             wave_data, frameRate = find_click.read_wav_file(pathname)
             [path, wavname_ext] = os.path.split(pathname)
             wavname = wavname_ext.split('/')[-1]
+            wavname = wavname.split('.')[0]
+
 
             fl = 5000
             fwhm = 0.0008
@@ -72,9 +74,11 @@ def detect_save_click(class_path, class_name):
                 # f.writeframes(click_data.tostring())
                 # f.close()
                 count = count + 1
-            wavname = "%(path)s/%(wavname)s_N%(num)d.npy" \
-                      % {'path': dst_path, 'wavname': wavname, 'num': len(click_arr)}
-            np.save(os.path.join(path, wavname), np.array(click_arr, dtype=np.short))
+
+            dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+                      % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
+            print(dst)
+            np.save(dst, np.array(click_arr, dtype=np.short))
 
             # if count > 20000:
             #     break

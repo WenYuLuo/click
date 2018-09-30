@@ -2,6 +2,7 @@ import tensorflow as tf
 import find_click
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 
 def weight_variable(shape):
@@ -133,13 +134,97 @@ def load_lwy_data(batch_num=20, n_total=500):
         count = 0
         #
         for pathname in wav_files:
-            wave_data, frame_rate = find_click.read_wav_file(pathname)
+            wave_data, frame_rate = find_click.read_wav_file7(pathname)
 
             energy = np.sqrt(np.sum(wave_data ** 2))
             wave_data /= energy
             wave_data = np.reshape(wave_data, [-1])
             xs = np.vstack((xs, wave_data))
             count += 1
+            if count >= batch_num * n_total:
+                break
+
+        xs0, xs1 = split_data(xs)
+
+        temp_train_xs = random_crop(xs0, batch_num, int(n_total * 4 / 5))
+        temp_test_xs = random_crop(xs1, batch_num, int(n_total / 5))
+
+        temp_train_ys = np.tile(label, (temp_train_xs.shape[0], 1))
+        temp_test_ys = np.tile(label, (temp_test_xs.shape[0], 1))
+
+        train_xs = np.vstack((train_xs, temp_train_xs))
+        train_ys = np.vstack((train_ys, temp_train_ys))
+        test_xs = np.vstack((test_xs, temp_test_xs))
+        test_ys = np.vstack((test_ys, temp_test_ys))
+
+    return train_xs, train_ys, test_xs, test_ys
+
+
+def load_npy_data(batch_num=20, n_total=500):
+    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
+    #
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gg/Rissos_(Grampus_grisieus)"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+
+    n_class = len(dict)
+    train_xs = np.empty((0, 192))
+    train_ys = np.empty((0, n_class))
+    test_xs = np.empty((0, 192))
+    test_ys = np.empty((0, n_class))
+
+    for key in dict:
+        path = dict[key]
+        c = int(key)
+        npy_files = find_click.list_npy_files(path)
+
+        random_index = np.random.permutation(len(npy_files))
+
+        label = np.zeros(n_class)
+        label[c] = 1
+
+        # xs = np.empty((0, 256))
+        xs = np.empty((0, 320))
+
+        count = 0
+        #
+        for i in range(len(npy_files)):
+            npy = npy_files[i]
+            print('loading %s' % npy)
+            npy_data = np.load(npy)
+
+            # x = np.arange(0, 320)
+            # plt.plot(x, npy_data[0])
+            # plt.show()
+
+            if npy_data.shape[0] == 0:
+                continue
+            npy_data = np.divide(npy_data, 2**10)
+            energy = np.sqrt(np.sum(npy_data**2, 1))
+            energy = np.tile(energy, (npy_data.shape[1], 1))
+            energy = energy.transpose()
+            npy_data = np.divide(npy_data, energy)
+
+            # plt.plot(x, npy_data[0])
+            # plt.show()
+
+            xs = np.vstack((xs, npy_data))
+            count += npy_data.shape[0]
             if count >= batch_num * n_total:
                 break
 
@@ -177,7 +262,9 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
     print("train cnn for one click ... ...")
 
     # train_xs, train_ys, test_xs, test_ys = load_data(data_path, n_class, batch_num, n_total)
-    train_xs, train_ys, test_xs, test_ys = load_lwy_data(batch_num, n_total)
+    train_xs, train_ys, test_xs, test_ys = load_npy_data(batch_num, n_total)
+    # train_xs, train_ys, test_xs, test_ys = load_lwy_data(batch_num, n_total)
+
 
     print(train_xs.shape)
     print(test_xs.shape)
@@ -217,8 +304,8 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
 
-    # train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
-    train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
+    train_step = tf.train.AdamOptimizer(1e-5).minimize(cross_entropy)
+    # train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
@@ -234,7 +321,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
             if (i + 1) % 1000 == 0:
                 step_acc = sess.run(accuracy, feed_dict={x: bxs, y_: bys, keep_prob: 1.0})
                 print("step : %d, training accuracy : %g" % (i + 1, step_acc))
-                if step_acc >= 0.99:
+                if step_acc >= 0.70:
                     break
 
             sess.run(train_step, feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
@@ -287,7 +374,7 @@ def test_cnn_bottlenose_data(data_path, n_class=8, batch_num=20):
     list_files = find_click.list_files(data_path)
     if list_files == []:
         list_files = list_files + [data_path]
-    c = 0  # the label of bottlenose is 3
+    c = 3  # the label of bottlenose is 3
     for path in list_files:
         # if path != './TestData/Dc/Dc':
         #     continue
@@ -573,6 +660,7 @@ n_total = 2000
 
 train_cnn('./Data/ClickC8', n_class, 20, 500)
 # test_cnn_bottlenose_data('./TestData/Tt/palmyra2007', n_class, batch_num)
+# test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
 
 
 

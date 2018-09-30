@@ -52,6 +52,21 @@ def list_wav_files(root_path):
     return list
 
 
+def list_npy_files(root_path):
+    list = []
+    for filename in os.listdir(root_path):
+        pathname = os.path.join(root_path, filename)
+        if os.path.isfile(pathname):
+            (shotname, extension) = os.path.splitext(filename)
+            if extension == '.npy':
+                list = list + [pathname]
+
+        else:
+            list = list + list_npy_files(pathname)
+
+    return list
+
+
 def list_files(root_path):
     list_folder = []
     for filename in os.listdir(root_path):
