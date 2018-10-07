@@ -325,7 +325,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
 
-    train_step = tf.train.AdamOptimizer(1e-5).minimize(cross_entropy)
+    train_step = tf.train.AdamOptimizer(1e-6).minimize(cross_entropy)
     # train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
