@@ -161,7 +161,8 @@ def load_lwy_data(batch_num=20, n_total=500):
 
 
 def load_npy_data(batch_num=20, n_total=500):
-    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''}
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
@@ -176,11 +177,17 @@ def load_npy_data(batch_num=20, n_total=500):
     dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
     dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gg/Rissos_(Grampus_grisieus)"
 
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
-    dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -257,6 +264,20 @@ def shufflelists(xs, ys, num):
     return batch_xs, batch_ys
 
 
+def shufflebatch(xs, ys, num):
+    shape = xs.shape
+    ri = np.random.permutation(shape[0])
+    num_batch = int(shape[0]/num)
+    for i in range(num_batch):
+        batch_xs = np.empty((0, xs.shape[1]))
+        batch_ys = np.empty((0, ys.shape[1]))
+        for j in range(i*num, (i+1)*num):
+            batch_xs = np.vstack((batch_xs, xs[ri[j]]))
+            batch_ys = np.vstack((batch_ys, ys[ri[j]]))
+        yield batch_xs, batch_ys
+
+
+
 def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     print("train cnn for one click ... ...")
@@ -316,17 +337,32 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     with tf.Session() as sess:
         sess.run(init)
-        for i in range(50000):
-            bxs, bys = shufflelists(train_xs, train_ys, 160)
-            if (i + 1) % 1000 == 0:
-                step_acc = sess.run(accuracy, feed_dict={x: bxs, y_: bys, keep_prob: 1.0})
-                print("step : %d, training accuracy : %g" % (i + 1, step_acc))
-                if step_acc >= 0.70:
-                    break
+        # for i in range(50000):
+        #     bxs, bys = shufflelists(train_xs, train_ys, 160)
+        #     if (i + 1) % 1000 == 0:
+        #         step_acc = sess.run(accuracy, feed_dict={x: bxs, y_: bys, keep_prob: 1.0})
+        #         print("step : %d, training accuracy : %g" % (i + 1, step_acc))
+        #         if step_acc >= 0.80:
+        #             break
+        #
+        #     sess.run(train_step, feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
+        #
+        # saver.save(sess, "params/cnn_net_lwy.ckpt")
 
-            sess.run(train_step, feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
+        for i in range(10000):
+            mean_acc = 0
+            step = 0
+            for bxs, bys in shufflebatch(train_xs, train_ys, 160):
+                m, acc = sess.run((train_step, accuracy), feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
+                mean_acc += acc
+                step += 1
+            mean_acc = float(mean_acc/step)
+            print("epoch : %d, training accuracy : %g" % (i + 1, mean_acc))
+            if mean_acc >= 0.95:
+                break
 
         saver.save(sess, "params/cnn_net_lwy.ckpt")
+
 
         # print("test accuracy : %g" % (sess.run(accuracy, feed_dict={x: test_xs, y_: test_ys, keep_prob: 1.0})))
         sample_num = test_xs.shape[0]
@@ -648,7 +684,7 @@ def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
 
 batch_num = 10
-n_class = 8
+n_class = 7
 n_total = 2000
 
 
