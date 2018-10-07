@@ -546,6 +546,161 @@ def test_cnn_bottlenose_data(data_path, n_class=8, batch_num=20):
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
 
 
+def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
+    c = label
+    npy_files = find_click.list_npy_files(data_path)
+    random_index = np.random.permutation(len(npy_files))
+    label = np.zeros(n_class)
+    label[c] = 1
+
+    # xs = np.empty((0, 256))
+    xs = np.empty((0, 320))
+
+    count = 0
+    #
+    for i in range(len(npy_files)):
+        npy = npy_files[random_index[i]]
+        print('loading %s' % npy)
+        npy_data = np.load(npy)
+
+        # x = np.arange(0, 320)
+        # plt.plot(x, npy_data[0])
+        # plt.show()
+
+        if npy_data.shape[0] == 0:
+            continue
+        npy_data = np.divide(npy_data, 2 ** 10)
+        energy = np.sqrt(np.sum(npy_data ** 2, 1))
+        energy = np.tile(energy, (npy_data.shape[1], 1))
+        energy = energy.transpose()
+        npy_data = np.divide(npy_data, energy)
+
+        # plt.plot(x, npy_data[0])
+        # plt.show()
+
+        xs = np.vstack((xs, npy_data))
+        count += npy_data.shape[0]
+        if count >= batch_num * n_total:
+            break
+
+    click_batch = []
+    sample_num = xs.shape[0]
+    total_batch = int(sample_num / batch_num)
+    print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': path, 'd': total_batch})
+    for i in range(0, total_batch):
+        tmp_xs = np.empty((0, 192))
+        for j in range(batch_num * i, batch_num * (i + 1)):
+            index = j % sample_num
+            temp_x = xs[index]
+            beg_idx = np.random.randint(64, (64 + 32))
+            crop_x = temp_x[beg_idx:(beg_idx + 192)]
+            crop_x = np.reshape(crop_x, [1, 192])
+            tmp_xs = np.vstack((tmp_xs, crop_x))
+
+        label = [0] * n_class
+        label[c] = 1
+
+        label = np.array([[label]])
+        label = list(label)
+
+        tmp_xs = np.expand_dims(np.expand_dims(tmp_xs, axis=0), axis=0)
+        tmp_xs = list(tmp_xs)
+        sample = tmp_xs + label
+        click_batch.append(sample)
+
+    x = tf.placeholder("float", [None, 192])
+    # 输入
+    x_image = tf.reshape(x, [-1, 1, 192, 1])
+
+    # 第一个卷积层
+    W_conv1 = weight_variable([1, 5, 1, 32])
+    b_conv1 = bias_variable([32])
+    h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+    h_pool1 = max_pool_1x2(h_conv1)
+
+    # 第二个卷积层
+    W_conv2 = weight_variable([1, 5, 32, 32])
+    b_conv2 = bias_variable([32])
+    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+    h_pool2 = max_pool_1x2(h_conv2)
+
+    # 密集链接层
+    W_fc1 = weight_variable([1 * 48 * 32, 256])
+    b_fc1 = bias_variable([256])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 1 * 48 * 32])
+    h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+
+    # Dropout
+    keep_prob = tf.placeholder("float")
+    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob=keep_prob)
+
+    # 输出层
+    W_fc2 = weight_variable([256, n_class])
+    b_fc2 = bias_variable([n_class])
+    y = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
+
+    init = tf.global_variables_initializer()
+
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        sess.run(init)
+        saver.restore(sess, "params/cnn_net_lwy.ckpt")  # 加载训练好的网络参数
+
+        print('the number of batch:', len(click_batch))
+        count = 0
+        for i in range(len(click_batch)):
+            temp_xs = click_batch[i][0]
+            label = np.zeros(n_class)
+            for j in range(0, temp_xs.shape[1]):
+                txs = temp_xs[0, j, :]
+                txs = np.reshape(txs, [1, 192])
+                out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                pre_y = np.argmax(out_y, 1)
+                label[pre_y] += 1
+
+            ref_y = click_batch[i][1]
+            if np.equal(np.argmax(label), np.argmax(ref_y)):
+                count += 1
+
+        print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
+
+        count = 0
+        weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+        for i in range(len(click_batch)):
+            temp_xs = click_batch[i][0]
+            label = np.zeros(n_class)
+            for j in range(0, temp_xs.shape[1]):
+                txs = temp_xs[0, j, :]
+                txs = np.reshape(txs, [1, 192])
+                out = sess.run(weight, feed_dict={x: txs, keep_prob: 1.0})
+                out = np.reshape(out, label.shape)
+                label = label + out
+
+            ref_y = click_batch[i][1]
+            if np.equal(np.argmax(label), np.argmax(ref_y)):
+                count += 1
+
+        print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
+
+        count = 0
+        for i in range(len(click_batch)):
+            temp_xs = click_batch[i][0]
+            label = np.zeros(n_class)
+            for j in range(0, temp_xs.shape[1]):
+                txs = temp_xs[0, j, :]
+                txs = np.reshape(txs, [1, 192])
+                out = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                out = np.reshape(out, label.shape)
+                label = label + out
+
+            ref_y = click_batch[i][1]
+            if np.equal(np.argmax(label), np.argmax(ref_y)):
+                count += 1
+
+        print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
+
+
 def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
     click_batch = []
     for c in range(0, n_class):
