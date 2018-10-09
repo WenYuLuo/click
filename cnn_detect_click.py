@@ -210,13 +210,13 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000):
         detected_list.pop(i - has_removed)
         has_removed = has_removed + 1
 
-    # # debug
-    # for i in detected_list:
-    #     detected_visual[i[0]:i[1]] = 1
-    # detected_visual = detected_visual * 20000
+    # debug
+    for i in detected_list:
+        detected_visual[i[0]:i[1]] = 1
+    detected_visual = detected_visual * 20000
     # # print('the number of detected click: %g' % num_detected)
-    # pl.plot(time, detected_visual)
-    # pl.show()
+    pl.plot(time, detected_visual)
+    pl.show()
 
     for pos_tuple in detected_list:
         temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
