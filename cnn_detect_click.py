@@ -104,15 +104,18 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000):
     b, a = signal.butter(8, wn, 'high')
 
     audio_filted = signal.filtfilt(b, a, audio)
+    scale = (2 ** 15 - 1) / max(audio_filted)
+    for i in np.arange(xn.size):
+        audio_filted[i] = audio_filted[i] * scale
 
     # audio_norm = local_normalize(audio_filted)
     #
     # audio_norm = audio_norm[0]
 
     time = np.arange(0, audio_filted.shape[0]) / fs
-    pl.plot(time, audio)
+    # pl.plot(time, audio)
     # pl.show()
-    # pl.plot(time, audio_filted)
+    pl.plot(time, audio_filted)
     pl.title('high pass filter')
     pl.xlabel('time')
     # pl.show()
@@ -210,13 +213,13 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000):
         detected_list.pop(i - has_removed)
         has_removed = has_removed + 1
 
-    # debug
-    for i in detected_list:
-        detected_visual[i[0]:i[1]] = 1
-    detected_visual = detected_visual * 20000
-    # # print('the number of detected click: %g' % num_detected)
-    pl.plot(time, detected_visual)
-    pl.show()
+    # # debug
+    # for i in detected_list:
+    #     detected_visual[i[0]:i[1]] = 1
+    # detected_visual = detected_visual * 20000
+    # # # print('the number of detected click: %g' % num_detected)
+    # pl.plot(time, detected_visual)
+    # pl.show()
 
     for pos_tuple in detected_list:
         temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
@@ -228,15 +231,16 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000):
         if t_end > len_audio:
             break
         click_data = audio_filted[t_start:t_end]
+
         click_data = click_data.astype(np.short)
         # print(click_data.shape)
         click_arr.append(click_data)
         count += 1
 
-    dst = "%(path)s/%(pre)s_N%(num)d.npy" \
-          % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
-    print(dst)
-    np.save(dst, np.array(click_arr, dtype=np.short))
+    # dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+    #       % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
+    # print(dst)
+    # np.save(dst, np.array(click_arr, dtype=np.short))
     print("count = %(count)d" % {'count': count})
 
 

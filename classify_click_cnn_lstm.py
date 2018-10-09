@@ -42,9 +42,16 @@ def random_crop(xs, batch_num, n_total):
             beg_idx = np.random.randint(64, (64 + 32))
             crop_x = temp_x[beg_idx:(beg_idx + 192)]
             crop_x = np.reshape(crop_x, [1, 192])
+            # crop_x = energy_normalize(crop_x)
             rc_xs = np.vstack((rc_xs, crop_x))
-
     return rc_xs
+
+
+# def energy_normalize(xs):
+#     energy = np.sqrt(np.sum(xs ** 2))
+#     xs /= energy
+#     xs = np.reshape(xs, [-1])
+#     return xs
 
 
 def load_data(data_path, n_class, batch_num=20, n_total=500):

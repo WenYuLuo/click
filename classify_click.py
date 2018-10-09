@@ -47,9 +47,17 @@ def random_crop(xs, batch_num, n_total):
             beg_idx = np.random.randint(64, (64 + 32))
             crop_x = temp_x[beg_idx:(beg_idx + 192)]
             crop_x = np.reshape(crop_x, [1, 192])
+            crop_x = energy_normalize(crop_x)
             rc_xs = np.vstack((rc_xs, crop_x))
 
     return rc_xs
+
+
+def energy_normalize(xs):
+    energy = np.sqrt(np.sum(xs ** 2))
+    xs /= energy
+    xs = np.reshape(xs, [-1])
+    return xs
 
 
 def load_data(data_path, n_class, batch_num=20, n_total=500):
@@ -74,9 +82,9 @@ def load_data(data_path, n_class, batch_num=20, n_total=500):
         for pathname in wav_files:
             wave_data, frame_rate = find_click.read_wav_file(pathname)
 
-            energy = np.sqrt(np.sum(wave_data ** 2))
-            wave_data /= energy
-            wave_data = np.reshape(wave_data, [-1])
+            # energy = np.sqrt(np.sum(wave_data ** 2))
+            # wave_data /= energy
+            # wave_data = np.reshape(wave_data, [-1])
             xs = np.vstack((xs, wave_data))
             count += 1
             if count >= batch_num * n_total:
@@ -136,9 +144,9 @@ def load_lwy_data(batch_num=20, n_total=500):
         for pathname in wav_files:
             wave_data, frame_rate = find_click.read_wav_file7(pathname)
 
-            energy = np.sqrt(np.sum(wave_data ** 2))
-            wave_data /= energy
-            wave_data = np.reshape(wave_data, [-1])
+            # energy = np.sqrt(np.sum(wave_data ** 2))
+            # wave_data /= energy
+            # wave_data = np.reshape(wave_data, [-1])
             xs = np.vstack((xs, wave_data))
             count += 1
             if count >= batch_num * n_total:
@@ -162,7 +170,7 @@ def load_lwy_data(batch_num=20, n_total=500):
 
 def load_npy_data(batch_num=20, n_total=500):
     # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''}
+    dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
@@ -187,7 +195,7 @@ def load_npy_data(batch_num=20, n_total=500):
     dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
     dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
     dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -221,11 +229,11 @@ def load_npy_data(batch_num=20, n_total=500):
 
             if npy_data.shape[0] == 0:
                 continue
-            npy_data = np.divide(npy_data, 2**10)
-            energy = np.sqrt(np.sum(npy_data**2, 1))
-            energy = np.tile(energy, (npy_data.shape[1], 1))
-            energy = energy.transpose()
-            npy_data = np.divide(npy_data, energy)
+            # npy_data = np.divide(npy_data, 2**10)
+            # energy = np.sqrt(np.sum(npy_data**2, 1))
+            # energy = np.tile(energy, (npy_data.shape[1], 1))
+            # energy = energy.transpose()
+            # npy_data = np.divide(npy_data, energy)
 
             # plt.plot(x, npy_data[0])
             # plt.show()
@@ -275,7 +283,6 @@ def shufflebatch(xs, ys, num):
             batch_xs = np.vstack((batch_xs, xs[ri[j]]))
             batch_ys = np.vstack((batch_ys, ys[ri[j]]))
         yield batch_xs, batch_ys
-
 
 
 def train_cnn(data_path, n_class, batch_num=20, n_total=500):
@@ -358,7 +365,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
                 step += 1
             mean_acc = float(mean_acc/step)
             print("epoch : %d, training accuracy : %g" % (i + 1, mean_acc))
-            if mean_acc >= 0.95:
+            if mean_acc >= 0.87:
                 break
 
         saver.save(sess, "params/cnn_net_lwy.ckpt")
@@ -586,7 +593,7 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
     click_batch = []
     sample_num = xs.shape[0]
     total_batch = int(sample_num / batch_num)
-    print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': path, 'd': total_batch})
+    print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': data_path, 'd': total_batch})
     for i in range(0, total_batch):
         tmp_xs = np.empty((0, 192))
         for j in range(batch_num * i, batch_num * (i + 1)):
@@ -839,9 +846,9 @@ def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
 
 batch_num = 10
-n_class = 7
+n_class = 6
 n_total = 2000
-
+label = 6
 
 # train_cnn('./Data/Click', 3, 20, 200)
 # train_cnn('./Data/ClickC8', n_class, 20, 500)
@@ -850,7 +857,7 @@ n_total = 2000
 # test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
 
 train_cnn('./Data/ClickC8', n_class, 20, 500)
-# test_cnn_bottlenose_data('./TestData/Tt/palmyra2007', n_class, batch_num)
+# test_cnn_data('./CNNDetection/Spinner/palmyra2007', label, n_class, batch_num)
 # test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
 
 
