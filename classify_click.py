@@ -172,30 +172,32 @@ def load_npy_data(batch_num=20, n_total=500):
     # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
     dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
 
-    # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    # dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+
+
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gg/Rissos_(Grampus_grisieus)"
     #
-    # dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
-    # dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
-    # dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
-    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
-    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Gg/Rissos_(Grampus_grisieus)"
-
-    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
-    # dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
-    # dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
-    # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
-    # dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
-
-    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
-    # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+    # # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
+    # # dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
+    # # dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
+    # # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
+    # # dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+    #
+    # # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Tt/palmyra2006"
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dc/Dc"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
+    # # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -332,7 +334,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
 
     cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
 
-    train_step = tf.train.AdamOptimizer(1e-5).minimize(cross_entropy)
+    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
     # train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
@@ -355,18 +357,23 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
         #     sess.run(train_step, feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
         #
         # saver.save(sess, "params/cnn_net_lwy.ckpt")
-
+        pre_acc = 0
         for i in range(10000):
-            mean_acc = 0
+            current_acc = 0
             step = 0
             for bxs, bys in shufflebatch(train_xs, train_ys, 160):
                 m, acc = sess.run((train_step, accuracy), feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
-                mean_acc += acc
+                current_acc += acc
                 step += 1
-            mean_acc = float(mean_acc/step)
-            print("epoch : %d, training accuracy : %g" % (i + 1, mean_acc))
-            if mean_acc >= 0.87:
+            current_acc = float(current_acc/step)
+            print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
+            if current_acc > 0.80:
                 break
+            # if current_acc - pre_acc < 0.001:
+            #     break
+            # else:
+            #     pre_acc = current_acc
+            #     continue
 
         saver.save(sess, "params/cnn_net_lwy.ckpt")
 
@@ -856,7 +863,7 @@ label = 6
 
 # test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
 
-train_cnn('./Data/ClickC8', n_class, 20, 500)
+train_cnn('./Data/ClickC8', n_class, 20, 600)
 # test_cnn_data('./CNNDetection/Spinner/palmyra2007', label, n_class, batch_num)
 # test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
 

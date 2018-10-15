@@ -90,7 +90,7 @@ if __name__ == '__main__':
     detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_'
                                  '(Mesoplodon_densirostris)', class_name='BBW')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
                       class_name='Tt')
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_'
@@ -99,14 +99,14 @@ if __name__ == '__main__':
     detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
                       class_name='Gg')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_common/Dc',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
                       class_name='Dc')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_common/Dd',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
                       class_name='Dd')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
                       class_name='Melon')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
                       class_name='Spinner')
