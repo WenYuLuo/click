@@ -27,7 +27,7 @@ def detect_save_click(class_path, class_name):
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./Data/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./WavData/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
@@ -50,7 +50,7 @@ def detect_save_click(class_path, class_name):
             for i in np.arange(xn.size):
                 xn[i] = xn[i] * scale
 
-            click_arr = []
+            # click_arr = []
             for j in range(click_index.shape[0]):
                 index = click_index[j]
                 # click_data = wave_data[index[0]:index[1], 0]
@@ -63,22 +63,22 @@ def detect_save_click(class_path, class_name):
 
                 click_data = click_data.astype(np.short)
 
-                click_arr.append(click_data)
-                # filename = "%(path)s/%(pre)s_click_%(n)06d.wav" % {'path': dst_path, 'pre': wavname, 'n': count}
-                # f = wave.open(filename, "wb")
-                # # set wav params
-                # f.setnchannels(1)
-                # f.setsampwidth(2)
-                # f.setframerate(tar_fs)
-                # # turn the data to string
-                # f.writeframes(click_data.tostring())
-                # f.close()
+                # click_arr.append(click_data)
+                filename = "%(path)s/%(pre)s_click_%(n)06d.wav" % {'path': dst_path, 'pre': wavname, 'n': count}
+                f = wave.open(filename, "wb")
+                # set wav params
+                f.setnchannels(1)
+                f.setsampwidth(2)
+                f.setframerate(tar_fs)
+                # turn the data to string
+                f.writeframes(click_data.tostring())
+                f.close()
                 count = count + 1
 
-            dst = "%(path)s/%(pre)s_N%(num)d.npy" \
-                      % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
-            print(dst)
-            np.save(dst, np.array(click_arr, dtype=np.short))
+            # dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+            #           % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
+            # print(dst)
+            # np.save(dst, np.array(click_arr, dtype=np.short))
 
             # if count > 20000:
             #     break

@@ -110,15 +110,25 @@ def load_lwy_data(batch_num=20, n_total=500):
 
     dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
 
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/TestData/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/TestData/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/TestData/Gg/Rissos_(Grampus_grisieus)"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/TestData/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/TestData/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/TestData/Gg/Rissos_(Grampus_grisieus)"
+    #
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/TestData/Tt/palmyra2006"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/TestData/Dc/Dc"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/TestData/Dd/Dd"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/TestData/Melon/palmyra2006"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/TestData/Spinner/palmyra2006"
 
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/TestData/Tt/palmyra2006"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/TestData/Dc/Dc"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/TestData/Dd/Dd"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/TestData/Melon/palmyra2006"
-    dict["7"] = "/home/fish/ROBB/CNN_click/click/TestData/Spinner/palmyra2006"
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/WavData/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/WavData/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/WavData/Gg/Rissos_(Grampus_grisieus)"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/WavData/Tt/palmyra2006"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/WavData/Dc/Dc"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/WavData/Dd/Dd"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/WavData/Melon/palmyra2006"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/WavData/Spinner/palmyra2006"
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -142,11 +152,11 @@ def load_lwy_data(batch_num=20, n_total=500):
         count = 0
         #
         for pathname in wav_files:
-            wave_data, frame_rate = find_click.read_wav_file7(pathname)
+            wave_data, frame_rate = find_click.read_wav_file(pathname)
 
             # energy = np.sqrt(np.sum(wave_data ** 2))
             # wave_data /= energy
-            # wave_data = np.reshape(wave_data, [-1])
+            wave_data = np.reshape(wave_data, [-1])
             xs = np.vstack((xs, wave_data))
             count += 1
             if count >= batch_num * n_total:
@@ -169,8 +179,8 @@ def load_lwy_data(batch_num=20, n_total=500):
 
 
 def load_npy_data(batch_num=20, n_total=500):
-    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
 
     dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
     dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
@@ -179,8 +189,8 @@ def load_npy_data(batch_num=20, n_total=500):
     dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
     dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
     dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
-    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
-    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
 
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
@@ -367,13 +377,13 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
                 step += 1
             current_acc = float(current_acc/step)
             print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
-            if current_acc > 0.80:
-                break
-            # if current_acc - pre_acc < 0.001:
+            # if current_acc > 0.51:
             #     break
-            # else:
-            #     pre_acc = current_acc
-            #     continue
+            if current_acc - pre_acc < 0.001:
+                break
+            else:
+                pre_acc = current_acc
+                continue
 
         saver.save(sess, "params/cnn_net_lwy.ckpt")
 
@@ -853,7 +863,7 @@ def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
 
 batch_num = 10
-n_class = 6
+n_class = 8
 n_total = 2000
 label = 6
 
@@ -863,7 +873,7 @@ label = 6
 
 # test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
 
-train_cnn('./Data/ClickC8', n_class, 20, 600)
+train_cnn('./Data/ClickC8', n_class, 20, 500)
 # test_cnn_data('./CNNDetection/Spinner/palmyra2007', label, n_class, batch_num)
 # test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
 
