@@ -27,18 +27,21 @@ def detect_save_click(class_path, class_name):
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./WavData/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./ClearData/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
         for pathname in wav_files:
 
             print(pathname)
+
             wave_data, frameRate = find_click.read_wav_file(pathname)
+
+            wave_data = resample(wave_data, frameRate, tar_fs)  #
+
             [path, wavname_ext] = os.path.split(pathname)
             wavname = wavname_ext.split('/')[-1]
             wavname = wavname.split('.')[0]
-
 
             fl = 5000
             fwhm = 0.0008
@@ -50,35 +53,35 @@ def detect_save_click(class_path, class_name):
             for i in np.arange(xn.size):
                 xn[i] = xn[i] * scale
 
-            # click_arr = []
+            click_arr = []
             for j in range(click_index.shape[0]):
                 index = click_index[j]
                 # click_data = wave_data[index[0]:index[1], 0]
 
                 click_data = xn[index[0]:index[1]]
 
-                click_data = resample(click_data, frameRate, tar_fs)  #
+                # click_data = resample(click_data, frameRate, tar_fs)  # 前置TKEO前
 
                 click_data = cut_data(click_data, signal_len)
 
                 click_data = click_data.astype(np.short)
 
-                # click_arr.append(click_data)
-                filename = "%(path)s/%(pre)s_click_%(n)06d.wav" % {'path': dst_path, 'pre': wavname, 'n': count}
-                f = wave.open(filename, "wb")
-                # set wav params
-                f.setnchannels(1)
-                f.setsampwidth(2)
-                f.setframerate(tar_fs)
-                # turn the data to string
-                f.writeframes(click_data.tostring())
-                f.close()
+                click_arr.append(click_data)
+                # filename = "%(path)s/%(pre)s_click_%(n)06d.wav" % {'path': dst_path, 'pre': wavname, 'n': count}
+                # f = wave.open(filename, "wb")
+                # # set wav params
+                # f.setnchannels(1)
+                # f.setsampwidth(2)
+                # f.setframerate(tar_fs)
+                # # turn the data to string
+                # f.writeframes(click_data.tostring())
+                # f.close()
                 count = count + 1
 
-            # dst = "%(path)s/%(pre)s_N%(num)d.npy" \
-            #           % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
-            # print(dst)
-            # np.save(dst, np.array(click_arr, dtype=np.short))
+            dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+                      % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
+            print(dst)
+            np.save(dst, np.array(click_arr, dtype=np.short))
 
             # if count > 20000:
             #     break
@@ -87,26 +90,56 @@ def detect_save_click(class_path, class_name):
 
 
 if __name__ == '__main__':
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_'
-                                 '(Mesoplodon_densirostris)', class_name='BBW')
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_'
+    #                              '(Mesoplodon_densirostris)', class_name='BBW')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
+    #                   class_name='Tt')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_'
+    #                              'macrorhynchus)', class_name='Gm')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
+    #                   class_name='Gg')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    #                   class_name='Dc')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    #                   class_name='Dd')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+    #                   class_name='Melon')
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
+    #                   class_name='Spinner')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
-                      class_name='Tt')
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
+                      class_name='RightWhale')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_'
-                                 'macrorhynchus)', class_name='Gm')
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
+                      class_name='PacWhite')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
+                      class_name='Gm')
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
                       class_name='Gg')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
-                      class_name='Dc')
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
+                      class_name='RoughToothed')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
-                      class_name='Dd')
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
+                      class_name='Sperm')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
+                      class_name='Striped')
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
+                      class_name='Mesoplodon')
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
+                      class_name='Beaked')
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
                       class_name='Melon')
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
-                      class_name='Spinner')
