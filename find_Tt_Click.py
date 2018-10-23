@@ -37,15 +37,15 @@ def detect_save_click(class_path, class_name):
 
             wave_data, frameRate = find_click.read_wav_file(pathname)
 
-            wave_data = resample(wave_data, frameRate, tar_fs)  #
+            # wave_data = resample(wave_data, frameRate, tar_fs)  #
 
             [path, wavname_ext] = os.path.split(pathname)
             wavname = wavname_ext.split('/')[-1]
             wavname = wavname.split('.')[0]
 
             fl = 5000
-            fwhm = 0.0008
-            fdr_threshold = 0.62
+            fwhm = 0.0004
+            fdr_threshold = 0.60
             click_index, xn = find_click.find_click_fdr_tkeo(wave_data, frameRate, fl, fwhm, fdr_threshold, signal_len,
                                                              8)
 
@@ -60,7 +60,7 @@ def detect_save_click(class_path, class_name):
 
                 click_data = xn[index[0]:index[1]]
 
-                # click_data = resample(click_data, frameRate, tar_fs)  # 前置TKEO前
+                click_data = resample(click_data, frameRate, tar_fs)  # 前置TKEO前
 
                 click_data = cut_data(click_data, signal_len)
 

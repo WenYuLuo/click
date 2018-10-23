@@ -179,18 +179,18 @@ def load_lwy_data(batch_num=20, n_total=500):
 
 
 def load_npy_data(batch_num=20, n_total=500):
-    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
-
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
-
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
-    dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+    #
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
+    #
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
 
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
@@ -208,6 +208,21 @@ def load_npy_data(batch_num=20, n_total=500):
     # dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Dd/Dd"
     # dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Melon/palmyra2006"
     # # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
+
+
+    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData/Beaked/Ziphius_Italy-Annoated_fine"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gg/Risso_dolphin_(Grampus_griseus) SCORE-Unannotated-Set2"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gm/Pilot Whales_Bahamas(AUTEC)-Unannotated-WHOI-Set2"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/ClearData/Melon/MellonHeaded_MTSTCS"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/ClearData/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/ClearData/PacWhite/PacWhitesidedDolphin"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/ClearData/Sperm/2nd_Workshop"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/ClearData/Striped/StripedDolphin_Marianas(MISTC)-Annotated"
+
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -368,7 +383,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
         #
         # saver.save(sess, "params/cnn_net_lwy.ckpt")
         pre_acc = 0
-        for i in range(10000):
+        for i in range(200):
             current_acc = 0
             step = 0
             for bxs, bys in shufflebatch(train_xs, train_ys, 160):
@@ -377,15 +392,15 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
                 step += 1
             current_acc = float(current_acc/step)
             print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
-            # if current_acc > 0.51:
-            #     break
-            if current_acc - pre_acc < 0.001:
+            if current_acc > 0.82:
                 break
-            else:
-                pre_acc = current_acc
-                continue
+            # if current_acc - pre_acc < 0.001:
+            #     break
+            # else:
+            #     pre_acc = current_acc
+            #     continue
 
-        saver.save(sess, "params/cnn_net_lwy.ckpt")
+        saver.save(sess, "params/cnn_net_lwy_clear.ckpt")
 
 
         # print("test accuracy : %g" % (sess.run(accuracy, feed_dict={x: test_xs, y_: test_ys, keep_prob: 1.0})))
