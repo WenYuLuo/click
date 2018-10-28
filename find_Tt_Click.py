@@ -6,13 +6,33 @@ import find_click
 from detect_click import *
 
 
+def calcu_click_energy(x):
+    # x = high_pass_filter(x, )
+    pow_x = x**2
+    # x_norm = np.linalg.norm(x, ord=2)**2
+    start_idx = int(x.shape[1]/2)
+    # energy_impulse = 0
+    half_size = 50
+    size = 2 * half_size
+    energy_impulse = np.sum(pow_x[0][start_idx-half_size:start_idx+half_size])
+    # print('size %g' % size)
+    return energy_impulse/size
+
+
+def calcu_energy(x):
+    # x_norm = np.linalg.norm(x, ord=2)
+    energy = np.sum(x**2)
+    energy = energy / len(x)
+    return energy
+
+
 def shuffle_frames(data):
     ri = np.random.permutation(len(data))
     data = [data[i] for i in ri]
     return data
 
 
-def detect_save_click(class_path, class_name):
+def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high=100):
     tar_fs = 192000
     signal_len = 320
     folder_list = find_click.list_files(class_path)
@@ -59,6 +79,18 @@ def detect_save_click(class_path, class_name):
                 # click_data = wave_data[index[0]:index[1], 0]
 
                 click_data = xn[index[0]:index[1]]
+
+                #  信噪比过滤
+                detected_clicks_energy = calcu_click_energy(click_data.reshape(1, -1))
+                noise_estimate1 = audio_filted[index[0] - 256:index[0]]
+                noise_estimate2 = audio_filted[index[1] + 1:index[1] + 257]
+                noise_estimate = np.hstack((noise_estimate1, noise_estimate2))
+                noise_energy = calcu_energy(noise_estimate)
+                if noise_energy <= 0 or detected_clicks_energy <= 0:
+                    continue
+                snr = 10 * math.log10(detected_clicks_energy / noise_energy)
+                if snr < snr_threshold_low or snr > snr_threshold_high:
+                    continue
 
                 click_data = resample(click_data, frameRate, tar_fs)  # 前置TKEO前
 
@@ -115,31 +147,48 @@ if __name__ == '__main__':
     #                   class_name='Spinner')
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
-                      class_name='RightWhale')
+                      class_name='RightWhale', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
-                      class_name='PacWhite')
+                      class_name='PacWhite', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
-                      class_name='Gm')
+                      class_name='Gm', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
-                      class_name='Gg')
+                      class_name='Gg', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
-                      class_name='RoughToothed')
+                      class_name='RoughToothed', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
-                      class_name='Sperm')
+                      class_name='Sperm', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
-                      class_name='Striped')
+                      class_name='Striped', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
-                      class_name='Mesoplodon')
+                      class_name='Mesoplodon', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
-                      class_name='Beaked')
+                      class_name='Beaked', snr_threshold_low=5)
 
     detect_save_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
-                      class_name='Melon')
+                      class_name='Melon', snr_threshold_low=5)
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
+                      class_name='Tt', snr_threshold_low=5, snr_threshold_high=20)
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+                      class_name='Dc', snr_threshold_low=5, snr_threshold_high=20)
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+                      class_name='Dd', snr_threshold_low=5, snr_threshold_high=20)
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+                      class_name='Melon', snr_threshold_low=5, snr_threshold_high=20)
+
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
+                      class_name='Spinner', snr_threshold_low=5, snr_threshold_high=20)
+
+
