@@ -59,93 +59,100 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000):
             :param dst_path:click存储路径
             :param tar_fs:输出信号采样率
     """
-    # 预加载模型参数
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.gpu_options.per_process_gpu_memory_fraction = 1
     # sess = tf.Session(config=config)
+    graph = tf.get_default_graph()
+    # graph = tf.reset_default_graph()
+
+    signal_len = 320
+    count = 0
+    click_arr = []
+    audio, fs = find_click.read_wav_file(file_name)
+    if audio.shape[1] > 1:
+        audio = audio[:, 1]
+    else:
+        audio = audio[:, 0]
+
+    # # 重采样至
+    # audio = resample(audio, fs, tar_fs)
+    # fs = tar_fs
+
+    [path, wavname_ext] = os.path.split(file_name)
+    wavname = wavname_ext.split('/')[-1]
+    wavname = wavname.split('.')[0]
+
+    if fs > 192000:
+        print('down sample was not supported! current sampling rate is %d' % fs)
+        return None
+
+    len_audio = len(audio)
+    fl = fs/40
+    # fs = 192000
+    wn = 2*fl/fs
+    b, a = signal.butter(8, wn, 'high')
+
+    audio_filted = signal.filtfilt(b, a, audio)
+    scale = (2 ** 15 - 1) / max(audio_filted)
+    for i in np.arange(audio_filted.size):
+        audio_filted[i] = audio_filted[i] * scale
+
+    # audio_norm = local_normalize(audio_filted)
+    #
+    # audio_norm = audio_norm[0]
+    #
+    # time = np.arange(0, audio_filted.shape[0]) / fs
+    # # pl.plot(time, audio)
+    # # pl.show()
+    # pl.plot(time, audio_filted)
+    # pl.title('high pass filter')
+    # pl.xlabel('time')
+    # # pl.show()
+
+    seg_length = 8000000
+    data_seg = []
+    if len_audio > seg_length:
+        seg_num = math.ceil(len_audio / seg_length)
+        for i in range(int(seg_num)):
+            start_seg = seg_length * i
+            if seg_length * (i + 1) > len_audio:
+                end_seg = len_audio
+            else:
+                end_seg = seg_length * (i + 1)
+            if end_seg > len_audio - 1:
+                end_seg = len_audio - 1
+            data = audio_filted[start_seg:end_seg]
+            data_norm = local_normalize(data)
+            data_norm = data_norm[0]
+            data_seg.append(data_norm)
+    else:
+        audio_norm = local_normalize(audio_filted)
+        audio_norm = audio_norm[0]
+        data_seg.append(audio_norm)
+
+        # detected_visual用于定位click
+    detected_visual = np.zeros_like(audio_filted)
+    # 预加载模型参数
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
     with tf.Session(config=config) as sess:
         saver = tf.train.import_meta_graph('params_cnn/allconv_cnn4click_norm_quater_manual.ckpt-300.meta')
         saver.restore(sess, 'params_cnn/allconv_cnn4click_norm_quater_manual.ckpt-300')
-        graph = tf.get_default_graph()
+        # graph = tf.reset_default_graph()
         # 获取模型参数
-        x = graph.get_operation_by_name('x').outputs[0]
-        y = graph.get_operation_by_name('y').outputs[0]
-        is_batch = graph.get_operation_by_name('is_batch').outputs[0]
-        keep_pro_l4_l5 = graph.get_operation_by_name('keep_pro_l4_l5').outputs[0]
-        collection = graph.get_collection('saved_module')
+        x = sess.graph.get_operation_by_name('x').outputs[0]
+        y = sess.graph.get_operation_by_name('y').outputs[0]
+        is_batch = sess.graph.get_operation_by_name('is_batch').outputs[0]
+        keep_pro_l4_l5 = sess.graph.get_operation_by_name('keep_pro_l4_l5').outputs[0]
+        collection = sess.graph.get_collection('saved_module')
         y_net_out6 = collection[0]
         train_step = collection[1]
         accuracy = collection[2]
         click_label = 0
-        # sess.graph.finalize()
+        # graph.finalize()
 
-        signal_len = 320
-        count = 0
-        click_arr = []
-        audio, fs = find_click.read_wav_file(file_name)
-        if audio.ndim > 1:
-            audio = audio[:, 0]
-        # 重采样至
-        audio = resample(audio, fs, tar_fs)
-        fs = tar_fs
-
-        [path, wavname_ext] = os.path.split(file_name)
-        wavname = wavname_ext.split('/')[-1]
-        wavname = wavname.split('.')[0]
-
-        if fs > 192000:
-            print('down sample was not supported! current sampling rate is %d' % fs)
-            return None
-
-        len_audio = len(audio)
-        fl = fs/40
-        # fs = 192000
-        wn = 2*fl/fs
-        b, a = signal.butter(8, wn, 'high')
-
-        audio_filted = signal.filtfilt(b, a, audio)
-        scale = (2 ** 15 - 1) / max(audio_filted)
-        for i in np.arange(audio_filted.size):
-            audio_filted[i] = audio_filted[i] * scale
-
-        # audio_norm = local_normalize(audio_filted)
-        #
-        # audio_norm = audio_norm[0]
-
-        time = np.arange(0, audio_filted.shape[0]) / fs
-        # pl.plot(time, audio)
-        # pl.show()
-        pl.plot(time, audio_filted)
-        pl.title('high pass filter')
-        pl.xlabel('time')
-        # pl.show()
-
-        seg_length = 8000000
-        data_seg = []
-        if len_audio > seg_length:
-            seg_num = math.ceil(len_audio / seg_length)
-            for i in range(int(seg_num)):
-                start_seg = seg_length * i
-                if seg_length * (i + 1) > len_audio:
-                    end_seg = len_audio
-                else:
-                    end_seg = seg_length * (i + 1)
-                if end_seg > len_audio - 1:
-                    end_seg = len_audio - 1
-                data = audio_filted[start_seg:end_seg]
-                data_norm = local_normalize(data)
-                data_norm = data_norm[0]
-                data_seg.append(data_norm)
-        else:
-            audio_norm = local_normalize(audio_filted)
-            audio_norm = audio_norm[0]
-            data_seg.append(audio_norm)
-
-        # detected_visual用于定位click
-        detected_visual = np.zeros_like(audio_filted)
         for i in range(len(data_seg)):
             audio_norm = data_seg[i]
             y_out = sess.run(y_net_out6, feed_dict={x: audio_norm.reshape(1, -1), keep_pro_l4_l5: 1.0, is_batch: False})
@@ -164,87 +171,111 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000):
                     # elif predict == 1:
                     #     detected_visual[start_point:end_point] -= 10
 
-        # detected click 定位
-        index_detected = np.where(detected_visual >= 1)[0]
-        if index_detected.size == 0:
-            print("count = %(count)d" % {'count': count})
-            return
-        detected_list = []
-        is_begin = False
-        pos_start = index_detected[0]
-        for i in range(len(index_detected)):
-            if not is_begin:
-                pos_start = index_detected[i]
-                is_begin = True
-            # 考虑到达list终点时的情况
-            if i+1 >= len(index_detected):
-                pos_end = index_detected[i]
-                detected_list.append((pos_start, pos_end+1))
-                break
-            if index_detected[i+1] - index_detected[i] > 1:
-                pos_end = index_detected[i]
-                detected_list.append((pos_start, pos_end+1))
-                is_begin = False
-            else:
-                continue
-
-        # debug: 未过滤检测click数
-        print('未过滤click数： %d' % len(detected_list))
-
-        # 去掉低于10db的click
-        index_to_remove = []
-        for i in range(len(detected_list)):
-            detected_pos = detected_list[i]
-            detected_length = detected_pos[1] - detected_pos[0]
-            if detected_length < 256 + 8 * 8:
-                detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
-                index_to_remove.append(i)
-                continue
-            # snr estimate
-            click = audio_filted[detected_pos[0]:detected_pos[1] + 1]
-            detected_clicks_energy = calcu_click_energy(click.reshape(1, -1))
-            noise_estimate1 = audio_filted[detected_pos[0] - 256:detected_pos[0]]
-            noise_estimate2 = audio_filted[detected_pos[1] + 1:detected_pos[1] + 257]
-            noise_estimate = np.hstack((noise_estimate1, noise_estimate2))
-            noise_energy = calcu_energy(noise_estimate)
-            snr = 10 * math.log10(detected_clicks_energy / noise_energy)
-            if snr < 3:
-                detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
-                index_to_remove.append(i)
-        has_removed = 0
-        for i in index_to_remove:
-            detected_list.pop(i - has_removed)
-            has_removed = has_removed + 1
-
-        # debug
-        for i in detected_list:
-            detected_visual[i[0]:i[1]] = 1
-        detected_visual = detected_visual * 20000
-        # # print('the number of detected click: %g' % num_detected)
-        pl.plot(time, detected_visual)
-        pl.show()
-
-        for pos_tuple in detected_list:
-            temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
-            # temp_click = resample(temp_click, fs, tar_fs)
-            max_index = np.argmax(temp_click)
-            max_index += pos_tuple[0]
-            t_start = max_index - int(signal_len/2)
-            t_end = max_index + int(signal_len/2)
-            if t_end > len_audio:
-                break
-            click_data = audio_filted[t_start:t_end]
-
-            click_data = click_data.astype(np.short)
-            # print(click_data.shape)
-            click_arr.append(click_data)
-            count += 1
-
-        dst = "%(path)s/%(pre)s_N%(num)d.npy" \
-              % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
-        print(dst)
-        np.save(dst, np.array(click_arr, dtype=np.short))
+    # detected click 定位
+    index_detected = np.where(detected_visual >= 1)[0]
+    if index_detected.size == 0:
         print("count = %(count)d" % {'count': count})
+        return
+    detected_list = []
+    is_begin = False
+    pos_start = index_detected[0]
+    for i in range(len(index_detected)):
+        if not is_begin:
+            pos_start = index_detected[i]
+            is_begin = True
+        # 考虑到达list终点时的情况
+        if i+1 >= len(index_detected):
+            pos_end = index_detected[i]
+            detected_list.append((pos_start, pos_end+1))
+            break
+        if index_detected[i+1] - index_detected[i] > 1:
+            pos_end = index_detected[i]
+            detected_list.append((pos_start, pos_end+1))
+            is_begin = False
+        else:
+            continue
+
+    # debug: 未过滤检测click数
+    print('未过滤click数： %d' % len(detected_list))
+
+    # 去掉低于10db的click
+    index_to_remove = []
+    for i in range(len(detected_list)):
+        detected_pos = detected_list[i]
+        detected_length = detected_pos[1] - detected_pos[0]
+        if detected_length < 256 + 8 * 8:
+            detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
+            index_to_remove.append(i)
+            continue
+        # snr estimate
+        click = audio_filted[detected_pos[0]:detected_pos[1] + 1]
+        detected_clicks_energy = calcu_click_energy(click.reshape(1, -1))
+        noise_estimate1 = audio_filted[detected_pos[0] - 256:detected_pos[0]]
+        noise_estimate2 = audio_filted[detected_pos[1] + 1:detected_pos[1] + 257]
+        noise_estimate = np.hstack((noise_estimate1, noise_estimate2))
+        noise_energy = calcu_energy(noise_estimate)
+        if noise_energy <= 0:
+            detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
+            index_to_remove.append(i)
+            continue
+        snr = 10 * math.log10(detected_clicks_energy / noise_energy)
+        if snr < 5 or snr > 20:
+            detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
+            index_to_remove.append(i)
+    has_removed = 0
+    for i in index_to_remove:
+        detected_list.pop(i - has_removed)
+        has_removed = has_removed + 1
+
+    # # debug
+    # for i in detected_list:
+    #     detected_visual[i[0]:i[1]] = 1
+    # detected_visual = detected_visual * 20000
+    # # # print('the number of detected click: %g' % num_detected)
+    # pl.plot(time, detected_visual)
+    # pl.show()
+
+    for pos_tuple in detected_list:
+        temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
+
+        # temp_click = resample(temp_click, fs, tar_fs)
+
+        max_index = np.argmax(temp_click)
+        max_index += pos_tuple[0]
+        t_start = max_index - int(signal_len/2)
+        if t_start < 0:
+            t_start = 0
+        t_end = max_index + int(signal_len/2)
+        if t_end > len_audio:
+            break
+        click_data = audio_filted[t_start:t_end]
+
+        click_data = resample(click_data, fs, tar_fs)
+
+        click_data = cut_data(click_data, signal_len)
+
+        click_data = click_data.astype(np.short)
+        # print(click_data.shape)
+        click_arr.append(click_data)
+        count += 1
+
+    dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+          % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
+    print(dst)
+    np.save(dst, np.array(click_arr, dtype=np.short))
+    print("count = %(count)d" % {'count': count})
+
+
+def cut_data(input_signal, out_len):
+
+    audio_len = len(input_signal)
+    if audio_len < out_len:
+        return input_signal
+
+    beg_idx = int(audio_len/2 - out_len / 2)
+    end_idx = beg_idx + out_len
+
+    return input_signal[beg_idx:end_idx]
 
 
 def detect_click(class_path, class_name):
@@ -261,7 +292,7 @@ def detect_click(class_path, class_name):
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./CNNClear/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./CNNClear1/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
@@ -287,44 +318,45 @@ if __name__ == '__main__':
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
     #                   class_name='Gg')
     #
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_common/Dc',
-    #                   class_name='Dc')
-    #
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_common/Dd',
-    #                   class_name='Dd')
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_common/Dc',
+                      class_name='Dc')
 
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed',
-    #                   class_name='Melon')
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_common/Dd',
+                      class_name='Dd')
 
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner',
-    #                   class_name='Spinner')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
-                      class_name='RightWhale')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
-                      class_name='PacWhite')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
-                      class_name='Gm')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
-                      class_name='Gg')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
-                      class_name='RoughToothed')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
-                      class_name='Sperm')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
-                      class_name='Striped')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
-                      class_name='Mesoplodon')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
-                      class_name='Beaked')
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed',
                       class_name='Melon')
+
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner',
+                      class_name='Spinner')
+
+    # detect_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
+    #                   class_name='RightWhale')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
+    #                   class_name='PacWhite')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
+    #                   class_name='Gm')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
+    #                   class_name='Gg')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
+    #                   class_name='RoughToothed')
+    #
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
+    #                   class_name='Striped')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
+    #                   class_name='Mesoplodon')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
+    #                   class_name='Beaked')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
+    #                   class_name='Melon')
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
+    #                   class_name='Sperm')

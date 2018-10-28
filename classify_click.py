@@ -213,16 +213,17 @@ def load_npy_data(batch_num=20, n_total=500):
     dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
     # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
 
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData/Beaked/Ziphius_Italy-Annoated_fine"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gg/Risso_dolphin_(Grampus_griseus) SCORE-Unannotated-Set2"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gm/Pilot Whales_Bahamas(AUTEC)-Unannotated-WHOI-Set2"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Risso_dolphin_(Grampus_griseus) SCORE-Unannotated-Set2"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
 
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/ClearData/Melon/MellonHeaded_MTSTCS"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/ClearData/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/ClearData/PacWhite/PacWhitesidedDolphin"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/ClearData/Sperm/2nd_Workshop"
-    dict["7"] = "/home/fish/ROBB/CNN_click/click/ClearData/Striped/StripedDolphin_Marianas(MISTC)-Annotated"
-
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Melon/palmyra2007"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin"
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Dd/Dd"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Spinner/palmyra2007"
+    # dict["8"] = ""
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -392,13 +393,13 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
                 step += 1
             current_acc = float(current_acc/step)
             print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
-            if current_acc > 0.82:
-                break
-            # if current_acc - pre_acc < 0.001:
+            # if current_acc > 0.70:
             #     break
-            # else:
-            #     pre_acc = current_acc
-            #     continue
+            if current_acc - pre_acc < 0.0005:
+                break
+            else:
+                pre_acc = current_acc
+                continue
 
         saver.save(sess, "params/cnn_net_lwy_clear.ckpt")
 
@@ -608,19 +609,20 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
 
         if npy_data.shape[0] == 0:
             continue
-        npy_data = np.divide(npy_data, 2 ** 10)
-        energy = np.sqrt(np.sum(npy_data ** 2, 1))
-        energy = np.tile(energy, (npy_data.shape[1], 1))
-        energy = energy.transpose()
-        npy_data = np.divide(npy_data, energy)
+
+        # npy_data = np.divide(npy_data, 2 ** 10)
+        # energy = np.sqrt(np.sum(npy_data ** 2, 1))
+        # energy = np.tile(energy, (npy_data.shape[1], 1))
+        # energy = energy.transpose()
+        # npy_data = np.divide(npy_data, energy)
 
         # plt.plot(x, npy_data[0])
         # plt.show()
 
         xs = np.vstack((xs, npy_data))
         count += npy_data.shape[0]
-        if count >= batch_num * n_total:
-            break
+        # if count >= batch_num * n_total:
+        #     break
 
     click_batch = []
     sample_num = xs.shape[0]
@@ -634,6 +636,7 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
             beg_idx = np.random.randint(64, (64 + 32))
             crop_x = temp_x[beg_idx:(beg_idx + 192)]
             crop_x = np.reshape(crop_x, [1, 192])
+            crop_x = energy_normalize(crop_x)
             tmp_xs = np.vstack((tmp_xs, crop_x))
 
         label = [0] * n_class
@@ -647,6 +650,7 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
         sample = tmp_xs + label
         click_batch.append(sample)
 
+    tf.reset_default_graph()
     x = tf.placeholder("float", [None, 192])
     # 输入
     x_image = tf.reshape(x, [-1, 1, 192, 1])
@@ -684,10 +688,11 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
 
     with tf.Session() as sess:
         sess.run(init)
-        saver.restore(sess, "params/cnn_net_lwy.ckpt")  # 加载训练好的网络参数
+        saver.restore(sess, "params/cnn_net_lwy_clear.ckpt")  # 加载训练好的网络参数
 
         print('the number of batch:', len(click_batch))
         count = 0
+        majority_mat = [0] * n_class
         for i in range(len(click_batch)):
             temp_xs = click_batch[i][0]
             label = np.zeros(n_class)
@@ -699,12 +704,16 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
                 label[pre_y] += 1
 
             ref_y = click_batch[i][1]
+            predict = np.argmax(label)
+            majority_mat[int(predict)] += 1
             if np.equal(np.argmax(label), np.argmax(ref_y)):
                 count += 1
 
         print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
+        print('result:', majority_mat)
 
         count = 0
+        weight_vote_mat = [0] * n_class
         weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
         for i in range(len(click_batch)):
             temp_xs = click_batch[i][0]
@@ -717,12 +726,16 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
                 label = label + out
 
             ref_y = click_batch[i][1]
+            predict = np.argmax(label)
+            weight_vote_mat[int(predict)] += 1
             if np.equal(np.argmax(label), np.argmax(ref_y)):
                 count += 1
 
         print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
+        print('result:', weight_vote_mat)
 
         count = 0
+        softmax_mat = [0] * n_class
         for i in range(len(click_batch)):
             temp_xs = click_batch[i][0]
             label = np.zeros(n_class)
@@ -734,10 +747,13 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
                 label = label + out
 
             ref_y = click_batch[i][1]
+            predict = np.argmax(label)
+            softmax_mat[int(predict)] += 1
             if np.equal(np.argmax(label), np.argmax(ref_y)):
                 count += 1
 
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
+        print('result:', softmax_mat)
 
 
 def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
@@ -880,7 +896,7 @@ def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
 batch_num = 10
 n_class = 8
 n_total = 2000
-label = 6
+# label = 1
 
 # train_cnn('./Data/Click', 3, 20, 200)
 # train_cnn('./Data/ClickC8', n_class, 20, 500)
@@ -889,8 +905,109 @@ label = 6
 # test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
 
 train_cnn('./Data/ClickC8', n_class, 20, 500)
-# test_cnn_data('./CNNDetection/Spinner/palmyra2007', label, n_class, batch_num)
+
+
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Melon/MellonHeaded_MTSTCS'
+# print(path)
+# label = 3
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Risso_dolphin_(Grampus_griseus) SCORE-Unannotated-Set2'
+# print(path)
+# label = 1
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot Whales_Bahamas(AUTEC)-Unannotated-NUWC'
+# print(path)
+# label = 2
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# # path = '/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin'
+# # print(path)
+# # label = 0
+# # test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)'
+# print(path)
+# label = 4
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Mesoplodon_CanaryIsles-Annotated_fine'
+# print(path)
+# label = 4
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin'
+# print(path)
+# label = 5
+# test_cnn_data(path, label, n_class, batch_num)
+
+path = '/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Unannotated'
+print(path)
+label = 0
+test_cnn_data(path, label, n_class, batch_num)
+
+
+path = '/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2007'
+print(path)
+label = 3
+test_cnn_data(path, label, n_class, batch_num)
+
+path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Risso_dolphin(Grampus_griseus)SCORE-Unannotated-Set1'
+print(path)
+label = 1
+test_cnn_data(path, label, n_class, batch_num)
+
+path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot_whales_Bahamas(AUTEC)-Annotated-NUWC'
+print(path)
+label = 2
+test_cnn_data(path, label, n_class, batch_num)
+
+
+path = '/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Mesoplodon_CanaryIsles_Johnson-Unannotated'
+print(path)
+label = 4
+test_cnn_data(path, label, n_class, batch_num)
+
+path = '/home/fish/ROBB/CNN_click/click/CNNClear1/PacWhite/PacWhitesidedDolphin'
+print(path)
+label = 5
+test_cnn_data(path, label, n_class, batch_num)
+
+path = '/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated'
+print(path)
+label = 0
+test_cnn_data(path, label, n_class, batch_num)
+
+
+# path = '/home/fish/ROBB/CNN_click/click/CNNClear1/RoughToothed/Rough Tooth_Bahamas(AUTEC)-Unannotated'
+# print(path)
+# label = 7
+# test_cnn_data(path, label, n_class, batch_num)
+
+
+path = '/home/fish/ROBB/CNN_click/click/CNNClear1/Dd/Dd1'
+print(path)
+label = 6
+test_cnn_data(path, label, n_class, batch_num)
+#
+path = '/home/fish/ROBB/CNN_click/click/CNNClear1/Spinner/palmyra2007'
+print(path)
+label = 7
+test_cnn_data(path, label, n_class, batch_num)
+
+
 # test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
-
-
-
+# dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': '', '6': '', '7': '', '8': ''}
+# # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+#
+# dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin"
+# dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Gg/Risso_dolphin_(Grampus_griseus) SCORE-Unannotated-Set2"
+# dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+#
+# dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Melon/MellonHeaded_MTSTCS"
+# dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+# dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/PacWhite/PacWhitesidedDolphin"
+# dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated"
+# dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RoughToothed/Rough Tooth_Bahamas(AUTEC)-Unannotated"
+# dict["8"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Striped/StripedDolphin_Marianas(MISTC)-Annotated"

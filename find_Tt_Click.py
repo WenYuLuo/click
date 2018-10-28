@@ -27,7 +27,7 @@ def detect_save_click(class_path, class_name):
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./ClearData/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./ClearData1/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
@@ -45,7 +45,7 @@ def detect_save_click(class_path, class_name):
 
             fl = 5000
             fwhm = 0.0004
-            fdr_threshold = 0.60
+            fdr_threshold = 0.65
             click_index, xn = find_click.find_click_fdr_tkeo(wave_data, frameRate, fl, fwhm, fdr_threshold, signal_len,
                                                              8)
 
