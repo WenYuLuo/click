@@ -4,6 +4,7 @@ import string
 import numpy as np
 import find_click
 from detect_click import *
+import math
 
 
 def calcu_click_energy(x):
@@ -47,7 +48,7 @@ def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./ClearData1/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./TKEO_SNR/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
@@ -82,8 +83,8 @@ def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold
 
                 #  信噪比过滤
                 detected_clicks_energy = calcu_click_energy(click_data.reshape(1, -1))
-                noise_estimate1 = audio_filted[index[0] - 256:index[0]]
-                noise_estimate2 = audio_filted[index[1] + 1:index[1] + 257]
+                noise_estimate1 = xn[index[0] - 256:index[0]]
+                noise_estimate2 = xn[index[1] + 1:index[1] + 257]
                 noise_estimate = np.hstack((noise_estimate1, noise_estimate2))
                 noise_energy = calcu_energy(noise_estimate)
                 if noise_energy <= 0 or detected_clicks_energy <= 0:
