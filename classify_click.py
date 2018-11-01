@@ -40,15 +40,26 @@ def random_crop(xs, batch_num, n_total):
     rc_xs = np.empty((0, 192))
 
     for i in range(0, n_total):
-        for j in range(batch_num * i, batch_num * (i + 1)):
+        # for j in range(batch_num * i, batch_num * (i + 1)):
+        while j >= (batch_num * i) and j < (batch_num * (i + 1)):
             index = j % num
             temp_x = xs[index]
             # beg_idx = np.random.randint(0, 32)
             beg_idx = np.random.randint(64, (64 + 32))
             crop_x = temp_x[beg_idx:(beg_idx + 192)]
             crop_x = np.reshape(crop_x, [1, 192])
+
+            crop_x = np.fft.fft(crop_x)
+            crop_x = np.sqrt(crop_x.real ** 2 + crop_x.imag ** 2)
+
+            # peak值位于20k以下，70k以上的滤去
+            peak_index = np.argmax(crop_x)
+            if peak_index < 20 or peak_index > 70:
+                np.delete(xs, index)
+                continue
             crop_x = energy_normalize(crop_x)
             rc_xs = np.vstack((rc_xs, crop_x))
+            j += 1
 
     return rc_xs
 
@@ -159,7 +170,7 @@ def load_lwy_data(batch_num=20, n_total=500):
             wave_data = np.reshape(wave_data, [-1])
             xs = np.vstack((xs, wave_data))
             count += 1
-            if count >= batch_num * n_total:
+            if count >= (batch_num + 10) * n_total:
                 break
 
         xs0, xs1 = split_data(xs)
@@ -594,61 +605,10 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
     label[c] = 1
 
     # xs = np.empty((0, 256))
-    xs = np.empty((0, 320))
+
 
     count = 0
     #
-    for i in range(len(npy_files)):
-        npy = npy_files[random_index[i]]
-        print('loading %s' % npy)
-        npy_data = np.load(npy)
-
-        # x = np.arange(0, 320)
-        # plt.plot(x, npy_data[0])
-        # plt.show()
-
-        if npy_data.shape[0] == 0:
-            continue
-
-        # npy_data = np.divide(npy_data, 2 ** 10)
-        # energy = np.sqrt(np.sum(npy_data ** 2, 1))
-        # energy = np.tile(energy, (npy_data.shape[1], 1))
-        # energy = energy.transpose()
-        # npy_data = np.divide(npy_data, energy)
-
-        # plt.plot(x, npy_data[0])
-        # plt.show()
-
-        xs = np.vstack((xs, npy_data))
-        count += npy_data.shape[0]
-        # if count >= batch_num * n_total:
-        #     break
-
-    click_batch = []
-    sample_num = xs.shape[0]
-    total_batch = int(sample_num / batch_num)
-    print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': data_path, 'd': total_batch})
-    for i in range(0, total_batch):
-        tmp_xs = np.empty((0, 192))
-        for j in range(batch_num * i, batch_num * (i + 1)):
-            index = j % sample_num
-            temp_x = xs[index]
-            beg_idx = np.random.randint(64, (64 + 32))
-            crop_x = temp_x[beg_idx:(beg_idx + 192)]
-            crop_x = np.reshape(crop_x, [1, 192])
-            crop_x = energy_normalize(crop_x)
-            tmp_xs = np.vstack((tmp_xs, crop_x))
-
-        label = [0] * n_class
-        label[c] = 1
-
-        label = np.array([[label]])
-        label = list(label)
-
-        tmp_xs = np.expand_dims(np.expand_dims(tmp_xs, axis=0), axis=0)
-        tmp_xs = list(tmp_xs)
-        sample = tmp_xs + label
-        click_batch.append(sample)
 
     tf.reset_default_graph()
     x = tf.placeholder("float", [None, 192])
@@ -690,70 +650,124 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
         sess.run(init)
         saver.restore(sess, "params/cnn_net_lwy_clear.ckpt")  # 加载训练好的网络参数
 
-        print('the number of batch:', len(click_batch))
-        count = 0
-        majority_mat = [0] * n_class
-        for i in range(len(click_batch)):
-            temp_xs = click_batch[i][0]
-            label = np.zeros(n_class)
-            for j in range(0, temp_xs.shape[1]):
-                txs = temp_xs[0, j, :]
-                txs = np.reshape(txs, [1, 192])
-                out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-                pre_y = np.argmax(out_y, 1)
-                label[pre_y] += 1
+        for i in range(len(npy_files)):
+            npy = npy_files[random_index[i]]
+            print('loading %s' % npy)
+            npy_data = np.load(npy)
 
-            ref_y = click_batch[i][1]
-            predict = np.argmax(label)
-            majority_mat[int(predict)] += 1
-            if np.equal(np.argmax(label), np.argmax(ref_y)):
-                count += 1
+            # x = np.arange(0, 320)
+            # plt.plot(x, npy_data[0])
+            # plt.show()
 
-        print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
-        print('result:', majority_mat)
+            if npy_data.shape[0] == 0:
+                continue
 
-        count = 0
-        weight_vote_mat = [0] * n_class
-        weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-        for i in range(len(click_batch)):
-            temp_xs = click_batch[i][0]
-            label = np.zeros(n_class)
-            for j in range(0, temp_xs.shape[1]):
-                txs = temp_xs[0, j, :]
-                txs = np.reshape(txs, [1, 192])
-                out = sess.run(weight, feed_dict={x: txs, keep_prob: 1.0})
-                out = np.reshape(out, label.shape)
-                label = label + out
+            # npy_data = np.divide(npy_data, 2 ** 10)
+            # energy = np.sqrt(np.sum(npy_data ** 2, 1))
+            # energy = np.tile(energy, (npy_data.shape[1], 1))
+            # energy = energy.transpose()
+            # npy_data = np.divide(npy_data, energy)
 
-            ref_y = click_batch[i][1]
-            predict = np.argmax(label)
-            weight_vote_mat[int(predict)] += 1
-            if np.equal(np.argmax(label), np.argmax(ref_y)):
-                count += 1
+            # plt.plot(x, npy_data[0])
+            # plt.show()
 
-        print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
-        print('result:', weight_vote_mat)
+            # xs = np.vstack((xs, npy_data))
+            xs = npy_data
+            count = npy_data.shape[0]
+            pirnt('loaded clicks:', count)
+            # if count >= batch_num * n_total:
+            #     break
 
-        count = 0
-        softmax_mat = [0] * n_class
-        for i in range(len(click_batch)):
-            temp_xs = click_batch[i][0]
-            label = np.zeros(n_class)
-            for j in range(0, temp_xs.shape[1]):
-                txs = temp_xs[0, j, :]
-                txs = np.reshape(txs, [1, 192])
-                out = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-                out = np.reshape(out, label.shape)
-                label = label + out
+            click_batch = []
+            sample_num = xs.shape[0]
+            total_batch = int(sample_num / batch_num)
+            print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': data_path, 'd': total_batch})
+            for i in range(0, total_batch):
+                tmp_xs = np.empty((0, 192))
+                for j in range(batch_num * i, batch_num * (i + 1)):
+                    index = j % sample_num
+                    temp_x = xs[index]
+                    beg_idx = np.random.randint(64, (64 + 32))
+                    crop_x = temp_x[beg_idx:(beg_idx + 192)]
+                    crop_x = np.reshape(crop_x, [1, 192])
+                    crop_x = energy_normalize(crop_x)
+                    tmp_xs = np.vstack((tmp_xs, crop_x))
 
-            ref_y = click_batch[i][1]
-            predict = np.argmax(label)
-            softmax_mat[int(predict)] += 1
-            if np.equal(np.argmax(label), np.argmax(ref_y)):
-                count += 1
+                label = [0] * n_class
+                label[c] = 1
 
-        print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
-        print('result:', softmax_mat)
+                label = np.array([[label]])
+                label = list(label)
+
+                tmp_xs = np.expand_dims(np.expand_dims(tmp_xs, axis=0), axis=0)
+                tmp_xs = list(tmp_xs)
+                sample = tmp_xs + label
+                click_batch.append(sample)
+
+                print('the number of batch:', len(click_batch))
+                count = 0
+                majority_mat = [0] * n_class
+                for i in range(len(click_batch)):
+                    temp_xs = click_batch[i][0]
+                    label = np.zeros(n_class)
+                    for j in range(0, temp_xs.shape[1]):
+                        txs = temp_xs[0, j, :]
+                        txs = np.reshape(txs, [1, 192])
+                        out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                        pre_y = np.argmax(out_y, 1)
+                        label[pre_y] += 1
+
+                    ref_y = click_batch[i][1]
+                    predict = np.argmax(label)
+                    majority_mat[int(predict)] += 1
+                    if np.equal(np.argmax(label), np.argmax(ref_y)):
+                        count += 1
+
+                print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
+                print('result:', majority_mat)
+
+                count = 0
+                weight_vote_mat = [0] * n_class
+                weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+                for i in range(len(click_batch)):
+                    temp_xs = click_batch[i][0]
+                    label = np.zeros(n_class)
+                    for j in range(0, temp_xs.shape[1]):
+                        txs = temp_xs[0, j, :]
+                        txs = np.reshape(txs, [1, 192])
+                        out = sess.run(weight, feed_dict={x: txs, keep_prob: 1.0})
+                        out = np.reshape(out, label.shape)
+                        label = label + out
+
+                    ref_y = click_batch[i][1]
+                    predict = np.argmax(label)
+                    weight_vote_mat[int(predict)] += 1
+                    if np.equal(np.argmax(label), np.argmax(ref_y)):
+                        count += 1
+
+                print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
+                print('result:', weight_vote_mat)
+
+                count = 0
+                softmax_mat = [0] * n_class
+                for i in range(len(click_batch)):
+                    temp_xs = click_batch[i][0]
+                    label = np.zeros(n_class)
+                    for j in range(0, temp_xs.shape[1]):
+                        txs = temp_xs[0, j, :]
+                        txs = np.reshape(txs, [1, 192])
+                        out = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                        out = np.reshape(out, label.shape)
+                        label = label + out
+
+                    ref_y = click_batch[i][1]
+                    predict = np.argmax(label)
+                    softmax_mat[int(predict)] += 1
+                    if np.equal(np.argmax(label), np.argmax(ref_y)):
+                        count += 1
+
+                print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
+                print('result:', softmax_mat)
 
 
 def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
