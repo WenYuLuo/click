@@ -179,18 +179,18 @@ def load_lwy_data(batch_num=20, n_total=500):
 
 
 def load_npy_data(batch_num=20, n_total=500):
-    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    # # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
-    #
-    # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    # dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
-    #
-    # dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
-    # dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
-    # dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
-    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
-    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2007"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2007"
+    dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2007"
 
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
@@ -210,20 +210,20 @@ def load_npy_data(batch_num=20, n_total=500):
     # # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
 
 
-    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
-
-    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Rissos_(Grampus_grisieus)"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Melon/palmyra2006"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin"
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Dd/Dd"
-    dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Spinner/palmyra2006"
-    # dict["8"] = ""
+    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+    #
+    # # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Rissos_(Grampus_grisieus)"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    #
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Melon/palmyra2006"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Dd/Dd"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Spinner/palmyra2006"
+    # # dict["8"] = ""
 
     n_class = len(dict)
     train_xs = np.empty((0, 192))
@@ -401,7 +401,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
                 pre_acc = current_acc
                 continue
 
-        saver.save(sess, "params/cnn_net_lwy_clear.ckpt")
+        saver.save(sess, "params/cnn_net_lwy.ckpt")
 
 
         # print("test accuracy : %g" % (sess.run(accuracy, feed_dict={x: test_xs, y_: test_ys, keep_prob: 1.0})))
@@ -904,53 +904,53 @@ n_total = 2000
 
 # test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
 
-# train_cnn('./Data/ClickC8', n_class, 20, 500)
+train_cnn('./Data/ClickC8', n_class, 20, 500)
 
-path = '/home/fish/ROBB/CNN_click/click/CNNDet/Melon/palmyra2006'
-print(path)
-label = 3
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Rissos_(Grampus_grisieus)'
-print(path)
-label = 1
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot Whales_Bahamas(AUTEC)-Unannotated-NUWC'
-print(path)
-label = 2
-test_cnn_data(path, label, n_class, batch_num)
-
-
-path = '/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Mesoplodon_CanaryIsles-Annotated_fine'
-print(path)
-label = 4
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/CNNDet/Mesoplodon/Mesoplodon_Bahamas(AUTEC)-Annotated'
-print(path)
-label = 4
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin'
-print(path)
-label = 5
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated'
-print(path)
-label = 0
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/CNNDet/Dd/Dd'
-print(path)
-label = 6
-test_cnn_data(path, label, n_class, batch_num)
-
-path = '/home/fish/ROBB/CNN_click/click/CNNDet/Spinner/palmyra2006'
-print(path)
-label = 7
-test_cnn_data(path, label, n_class, batch_num)
+# path = '/home/fish/ROBB/CNN_click/click/CNNDet/Melon/palmyra2006'
+# print(path)
+# label = 3
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Rissos_(Grampus_grisieus)'
+# print(path)
+# label = 1
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot Whales_Bahamas(AUTEC)-Unannotated-NUWC'
+# print(path)
+# label = 2
+# test_cnn_data(path, label, n_class, batch_num)
+#
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Mesoplodon_CanaryIsles-Annotated_fine'
+# print(path)
+# label = 4
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/CNNDet/Mesoplodon/Mesoplodon_Bahamas(AUTEC)-Annotated'
+# print(path)
+# label = 4
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin'
+# print(path)
+# label = 5
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated'
+# print(path)
+# label = 0
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/CNNDet/Dd/Dd'
+# print(path)
+# label = 6
+# test_cnn_data(path, label, n_class, batch_num)
+#
+# path = '/home/fish/ROBB/CNN_click/click/CNNDet/Spinner/palmyra2006'
+# print(path)
+# label = 7
+# test_cnn_data(path, label, n_class, batch_num)
 
 
 # test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
