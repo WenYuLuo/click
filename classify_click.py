@@ -35,14 +35,16 @@ def split_data(xs):
     return xs0, xs1
 
 
-def random_crop(xs, batch_num, n_total):
-    num = xs.shape[0]
-    rc_xs = np.empty((0, 192))
+def random_crop(xs, batch_num, n_total, key):
+    # num = xs.shape[0]
+    rc_xs = np.empty((0, 96))
+    deleted = 0
 
     for i in range(0, n_total):
         # for j in range(batch_num * i, batch_num * (i + 1)):
+        j = batch_num * i
         while j >= (batch_num * i) and j < (batch_num * (i + 1)):
-            index = j % num
+            index = j % xs.shape[0]
             temp_x = xs[index]
             # beg_idx = np.random.randint(0, 32)
             beg_idx = np.random.randint(64, (64 + 32))
@@ -52,15 +54,20 @@ def random_crop(xs, batch_num, n_total):
             crop_x = np.fft.fft(crop_x)
             crop_x = np.sqrt(crop_x.real ** 2 + crop_x.imag ** 2)
 
+            crop_x = crop_x[0, 96:]
+            crop_x = np.reshape(crop_x, [1, 96])
             # peak值位于20k以下，70k以上的滤去
-            peak_index = np.argmax(crop_x)
-            if peak_index < 20 or peak_index > 70:
-                np.delete(xs, index)
-                continue
+            if int(key) > 2:
+                peak_index = np.argmax(crop_x)
+                if peak_index < 20 or peak_index > 80:
+                    xs = np.delete(xs, index, 0)
+                    deleted += 1
+                    continue
+
             crop_x = energy_normalize(crop_x)
             rc_xs = np.vstack((rc_xs, crop_x))
             j += 1
-
+    print('sampled from %d clicks' % xs.shape[0])
     return rc_xs
 
 
@@ -190,18 +197,18 @@ def load_lwy_data(batch_num=20, n_total=500):
 
 
 def load_npy_data(batch_num=20, n_total=500):
-    dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
-
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
-
-    dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
-    dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
-    dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2007"
-    dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2007"
-    dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2007"
+    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
+    # # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+    #
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/Data/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/Data/Gg/Rissos_(Grampus_grisieus)"
+    #
+    # dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+    # dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+    # dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
+    # dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+    # dict["7"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
 
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/BBW/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
@@ -221,25 +228,25 @@ def load_npy_data(batch_num=20, n_total=500):
     # # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDetection/Spinner/palmyra2006"
 
 
-    # dict = {'0': '', '1': '', '2': '', '3':'', '4':'', '5':'', '6':'', '7':''}
-    # # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
-    #
-    # # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin"
-    # dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gg/Rissos_(Grampus_grisieus)"
-    # dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-    #
-    # dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Melon/palmyra2006"
-    # dict["4"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-    # dict["5"] = "/home/fish/ROBB/CNN_click/click/ClearData1/PacWhite/PacWhitesidedDolphin"
-    # dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated"
-    # dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Dd/Dd"
-    # dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNDet/Spinner/palmyra2006"
-    # # dict["8"] = ""
+    dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''}
+    # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gg/Rissos_(Grampus_grisieus)"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+
+    dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
+    dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+    dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+    dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+
+
 
     n_class = len(dict)
-    train_xs = np.empty((0, 192))
+    train_xs = np.empty((0, 96))
     train_ys = np.empty((0, n_class))
-    test_xs = np.empty((0, 192))
+    test_xs = np.empty((0, 96))
     test_ys = np.empty((0, n_class))
 
     for key in dict:
@@ -279,14 +286,17 @@ def load_npy_data(batch_num=20, n_total=500):
 
             xs = np.vstack((xs, npy_data))
             count += npy_data.shape[0]
-            if count >= batch_num * n_total:
+            # if count >= batch_num * n_total:
+            #     break
+            if count >= 100000:
                 break
-        print(count)
+        print('loaded clicks:', count)
 
         xs0, xs1 = split_data(xs)
-
-        temp_train_xs = random_crop(xs0, batch_num, int(n_total * 4 / 5))
-        temp_test_xs = random_crop(xs1, batch_num, int(n_total / 5))
+        print('crop training clicks...')
+        temp_train_xs = random_crop(xs0, batch_num, int(n_total * 4 / 5), key)
+        print('crop testing clicks...')
+        temp_test_xs = random_crop(xs1, batch_num, int(n_total / 5), key)
 
         temp_train_ys = np.tile(label, (temp_train_xs.shape[0], 1))
         temp_test_ys = np.tile(label, (temp_test_xs.shape[0], 1))
@@ -336,11 +346,11 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
     print(train_xs.shape)
     print(test_xs.shape)
 
-    x = tf.placeholder("float", [None, 192])
+    x = tf.placeholder("float", [None, 96])
     y_ = tf.placeholder("float", [None, n_class])
 
     # 输入
-    x_image = tf.reshape(x, [-1, 1, 192, 1])
+    x_image = tf.reshape(x, [-1, 1, 96, 1])
 
     # 第一个卷积层
     W_conv1 = weight_variable([1, 5, 1, 32])
@@ -355,9 +365,9 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
     h_pool2 = max_pool_1x2(h_conv2)
 
     # 密集链接层
-    W_fc1 = weight_variable([1 * 48 * 32, 256])
+    W_fc1 = weight_variable([1 * 24 * 32, 256])
     b_fc1 = bias_variable([256])
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 1 * 48 * 32])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 1 * 24 * 32])
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
     # Dropout
@@ -421,7 +431,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
         correct_cout = 0
         for j in range(0, sample_num):
             txs = test_xs[j]
-            txs = np.reshape(txs, [1, 192])
+            txs = np.reshape(txs, [1, 96])
             out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
             if np.equal(np.argmax(out_y), np.argmax(test_ys[j])):
                 correct_cout += 1
@@ -440,7 +450,7 @@ def train_cnn(data_path, n_class, batch_num=20, n_total=500):
             label = np.zeros(n_class)
             for j in range(batch_num * batch_index, batch_num * (batch_index + 1)):
                 txs = test_xs[j]
-                txs = np.reshape(txs, [1, 192])
+                txs = np.reshape(txs, [1, 96])
                 out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
                 c = np.argmax(out_y, 1)
                 label[c] += 1
@@ -611,9 +621,9 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
     #
 
     tf.reset_default_graph()
-    x = tf.placeholder("float", [None, 192])
+    x = tf.placeholder("float", [None, 96])
     # 输入
-    x_image = tf.reshape(x, [-1, 1, 192, 1])
+    x_image = tf.reshape(x, [-1, 1, 96, 1])
 
     # 第一个卷积层
     W_conv1 = weight_variable([1, 5, 1, 32])
@@ -628,9 +638,9 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
     h_pool2 = max_pool_1x2(h_conv2)
 
     # 密集链接层
-    W_fc1 = weight_variable([1 * 48 * 32, 256])
+    W_fc1 = weight_variable([1 * 24 * 32, 256])
     b_fc1 = bias_variable([256])
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 1 * 48 * 32])
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 1 * 24 * 32])
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
     # Dropout
@@ -646,9 +656,12 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
 
     saver = tf.train.Saver()
 
+    print('==============================================')
+    total_correct = 0
+    total = 0
     with tf.Session() as sess:
         sess.run(init)
-        saver.restore(sess, "params/cnn_net_lwy_clear.ckpt")  # 加载训练好的网络参数
+        saver.restore(sess, "params/cnn_net_lwy.ckpt")  # 加载训练好的网络参数
 
         for i in range(len(npy_files)):
             npy = npy_files[random_index[i]]
@@ -670,28 +683,49 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
 
             # plt.plot(x, npy_data[0])
             # plt.show()
-
-            # xs = np.vstack((xs, npy_data))
-            xs = npy_data
+            xs = np.empty((0, 320))
+            xs = np.vstack((xs, npy_data))
+            # xs = npy_data
             count = npy_data.shape[0]
-            pirnt('loaded clicks:', count)
+            print('loaded clicks:', count)
             # if count >= batch_num * n_total:
             #     break
 
             click_batch = []
             sample_num = xs.shape[0]
             total_batch = int(sample_num / batch_num)
-            print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': data_path, 'd': total_batch})
+            # print('the number of data(%(datasrc)s): %(d)d' % {'datasrc': data_path, 'd': total_batch})
             for i in range(0, total_batch):
-                tmp_xs = np.empty((0, 192))
-                for j in range(batch_num * i, batch_num * (i + 1)):
-                    index = j % sample_num
+                tmp_xs = np.empty((0, 96))
+                # for j in range(batch_num * i, batch_num * (i + 1)):
+                j = batch_num * i
+                if j > xs.shape[0]:
+                    break
+                while j >= (batch_num * i) and j < (batch_num * (i + 1)):
+                    if xs.shape[0] == 0:
+                        break
+                    index = j % xs.shape[0]
                     temp_x = xs[index]
                     beg_idx = np.random.randint(64, (64 + 32))
                     crop_x = temp_x[beg_idx:(beg_idx + 192)]
                     crop_x = np.reshape(crop_x, [1, 192])
+
+                    crop_x = np.fft.fft(crop_x)
+                    crop_x = np.sqrt(crop_x.real ** 2 + crop_x.imag ** 2)
+
+                    crop_x = crop_x[0, 96:]
+                    crop_x = np.reshape(crop_x, [1, 96])
+
+                    if c > 2:
+                        # peak值位于20k以下，70k以上的滤去
+                        peak_index = np.argmax(crop_x)
+                        if peak_index < 20 or peak_index > 80:
+                            xs = np.delete(xs, index, 0)
+                            continue
+
                     crop_x = energy_normalize(crop_x)
                     tmp_xs = np.vstack((tmp_xs, crop_x))
+                    j += 1
 
                 label = [0] * n_class
                 label[c] = 1
@@ -704,71 +738,77 @@ def test_cnn_data(data_path, label=3, n_class=8, batch_num=20):
                 sample = tmp_xs + label
                 click_batch.append(sample)
 
-                print('the number of batch:', len(click_batch))
-                count = 0
-                majority_mat = [0] * n_class
-                for i in range(len(click_batch)):
-                    temp_xs = click_batch[i][0]
-                    label = np.zeros(n_class)
-                    for j in range(0, temp_xs.shape[1]):
-                        txs = temp_xs[0, j, :]
-                        txs = np.reshape(txs, [1, 192])
-                        out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-                        pre_y = np.argmax(out_y, 1)
-                        label[pre_y] += 1
+            print('the number of batch:', len(click_batch))
+            if len(click_batch) == 0:
+                continue
+            total += len(click_batch)
+            count = 0
+            majority_mat = [0] * n_class
+            for i in range(len(click_batch)):
+                temp_xs = click_batch[i][0]
+                label = np.zeros(n_class)
+                for j in range(0, temp_xs.shape[1]):
+                    txs = temp_xs[0, j, :]
+                    txs = np.reshape(txs, [1, 96])
+                    out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+                    pre_y = np.argmax(out_y, 1)
+                    label[pre_y] += 1
 
-                    ref_y = click_batch[i][1]
-                    predict = np.argmax(label)
-                    majority_mat[int(predict)] += 1
-                    if np.equal(np.argmax(label), np.argmax(ref_y)):
-                        count += 1
+                ref_y = click_batch[i][1]
+                predict = np.argmax(label)
+                majority_mat[int(predict)] += 1
+                if np.equal(np.argmax(label), np.argmax(ref_y)):
+                    count += 1
+            total_correct += count
+            print('correct:', count, 'total:', len(click_batch))
+            print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
+            print('result:', majority_mat)
 
-                print('cnn test accuracy (majority voting): ', round(count / len(click_batch), 3))
-                print('result:', majority_mat)
 
-                count = 0
-                weight_vote_mat = [0] * n_class
-                weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-                for i in range(len(click_batch)):
-                    temp_xs = click_batch[i][0]
-                    label = np.zeros(n_class)
-                    for j in range(0, temp_xs.shape[1]):
-                        txs = temp_xs[0, j, :]
-                        txs = np.reshape(txs, [1, 192])
-                        out = sess.run(weight, feed_dict={x: txs, keep_prob: 1.0})
-                        out = np.reshape(out, label.shape)
-                        label = label + out
-
-                    ref_y = click_batch[i][1]
-                    predict = np.argmax(label)
-                    weight_vote_mat[int(predict)] += 1
-                    if np.equal(np.argmax(label), np.argmax(ref_y)):
-                        count += 1
-
-                print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
-                print('result:', weight_vote_mat)
-
-                count = 0
-                softmax_mat = [0] * n_class
-                for i in range(len(click_batch)):
-                    temp_xs = click_batch[i][0]
-                    label = np.zeros(n_class)
-                    for j in range(0, temp_xs.shape[1]):
-                        txs = temp_xs[0, j, :]
-                        txs = np.reshape(txs, [1, 192])
-                        out = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-                        out = np.reshape(out, label.shape)
-                        label = label + out
-
-                    ref_y = click_batch[i][1]
-                    predict = np.argmax(label)
-                    softmax_mat[int(predict)] += 1
-                    if np.equal(np.argmax(label), np.argmax(ref_y)):
-                        count += 1
-
-                print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
-                print('result:', softmax_mat)
-
+            # count = 0
+            # weight_vote_mat = [0] * n_class
+            # weight = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+            # for i in range(len(click_batch)):
+            #     temp_xs = click_batch[i][0]
+            #     label = np.zeros(n_class)
+            #     for j in range(0, temp_xs.shape[1]):
+            #         txs = temp_xs[0, j, :]
+            #         txs = np.reshape(txs, [1, 192])
+            #         out = sess.run(weight, feed_dict={x: txs, keep_prob: 1.0})
+            #         out = np.reshape(out, label.shape)
+            #         label = label + out
+            #
+            #     ref_y = click_batch[i][1]
+            #     predict = np.argmax(label)
+            #     weight_vote_mat[int(predict)] += 1
+            #     if np.equal(np.argmax(label), np.argmax(ref_y)):
+            #         count += 1
+            #
+            # print('cnn test accuracy (weight voting): ', round(count / len(click_batch), 3))
+            # print('result:', weight_vote_mat)
+            #
+            # count = 0
+            # softmax_mat = [0] * n_class
+            # for i in range(len(click_batch)):
+            #     temp_xs = click_batch[i][0]
+            #     label = np.zeros(n_class)
+            #     for j in range(0, temp_xs.shape[1]):
+            #         txs = temp_xs[0, j, :]
+            #         txs = np.reshape(txs, [1, 192])
+            #         out = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
+            #         out = np.reshape(out, label.shape)
+            #         label = label + out
+            #
+            #     ref_y = click_batch[i][1]
+            #     predict = np.argmax(label)
+            #     softmax_mat[int(predict)] += 1
+            #     if np.equal(np.argmax(label), np.argmax(ref_y)):
+            #         count += 1
+            #
+            # print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
+            # print('result:', softmax_mat)
+    print('total correct:', total_correct, 'total batch:', total)
+    print('%s mean acc: %f'%(data_path, total_correct/total))
 
 def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
     click_batch = []
@@ -907,8 +947,8 @@ def test_cnn_batch_data(data_path, n_class, batch_num=20, n_total=500):
 
         print('cnn test accuracy (sum of softmax voting): ', round(count / len(click_batch), 3))
 
-batch_num = 10
-n_class = 8
+batch_num = 20
+n_class = 7
 n_total = 2000
 # label = 1
 
@@ -917,7 +957,7 @@ n_total = 2000
 # exit()
 
 # test_cnn_batch_data('./Data/ClickC8', n_class, batch_num, n_total)
-
+#
 train_cnn('./Data/ClickC8', n_class, 20, 500)
 
 # path = '/home/fish/ROBB/CNN_click/click/CNNDet/Melon/palmyra2006'
@@ -968,16 +1008,22 @@ train_cnn('./Data/ClickC8', n_class, 20, 500)
 
 
 # test_cnn_bottlenose_data('./TestData/Tt/cruise', n_class, batch_num)
-# dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': '', '6': '', '7': '', '8': ''}
-# # dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
-#
-# dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RightWhale/N_RightwhaleDolphin"
-# dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Gg/Risso_dolphin_(Grampus_griseus) SCORE-Unannotated-Set2"
-# dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
-#
-# dict["3"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Melon/MellonHeaded_MTSTCS"
-# dict["4"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
-# dict["5"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/PacWhite/PacWhitesidedDolphin"
-# dict["6"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated"
-# dict["7"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/RoughToothed/Rough Tooth_Bahamas(AUTEC)-Unannotated"
-# dict["8"] = "/home/fish/ROBB/CNN_click/click/CNNClear1/Striped/StripedDolphin_Marianas(MISTC)-Annotated"
+
+dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''}
+# dict = {'0': '', '1': '', '2': '', '3': '', '4': '', '5': ''}
+
+dict["0"] = "/home/fish/ROBB/CNN_click/click/ClearData/Mesoplodon/Blainvilles_beaked_whale_(Mesoplodon_densirostris)"
+dict["1"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gg/Rissos_(Grampus_grisieus)"
+dict["2"] = "/home/fish/ROBB/CNN_click/click/ClearData/Gm/Pilot_whale_(Globicephala_macrorhynchus)"
+
+dict["3"] = "/home/fish/ROBB/CNN_click/click/Data/Melon/palmyra2006"
+dict["4"] = "/home/fish/ROBB/CNN_click/click/Data/Dd/Dd"
+dict["5"] = "/home/fish/ROBB/CNN_click/click/Data/Spinner/palmyra2006"
+# dict["0"] = "/home/fish/ROBB/CNN_click/click/Data/Dc/Dc"
+dict["6"] = "/home/fish/ROBB/CNN_click/click/Data/Tt/palmyra2006"
+
+for key in dict:
+    path = dict[key]
+    print(path)
+    label = int(key)
+    test_cnn_data(path, label, n_class, batch_num)
