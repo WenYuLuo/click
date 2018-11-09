@@ -48,7 +48,7 @@ def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./TKEO_SNR/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./TKEO_wk5_complete/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
@@ -70,7 +70,7 @@ def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold
             click_index, xn = find_click.find_click_fdr_tkeo(wave_data, frameRate, fl, fwhm, fdr_threshold, signal_len,
                                                              8)
 
-            scale = (2 ** 15 - 1) / max(xn)
+            scale = (2 ** 12 - 1) / max(xn)
             for i in np.arange(xn.size):
                 xn[i] = xn[i] * scale
 
@@ -147,49 +147,63 @@ if __name__ == '__main__':
     # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
     #                   class_name='Spinner')
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
-                      class_name='RightWhale', snr_threshold_low=5)
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
+    #                   class_name='RightWhale', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
+    #                   class_name='PacWhite', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
+    #                   class_name='Gm', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
+    #                   class_name='Gg', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
+    #                   class_name='RoughToothed', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
+    #                   class_name='Sperm', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
+    #                   class_name='Striped', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
+    #                   class_name='Mesoplodon', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
+    #                   class_name='Beaked', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
+    #                   class_name='Melon', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
+    #                   class_name='Tt', snr_threshold_low=5, snr_threshold_high=20)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    #                   class_name='Dc', snr_threshold_low=5, snr_threshold_high=20)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    #                   class_name='Dd', snr_threshold_low=5, snr_threshold_high=20)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+    #                   class_name='Melon', snr_threshold_low=5, snr_threshold_high=20)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
+    #                   class_name='Spinner', snr_threshold_low=5, snr_threshold_high=20)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
-                      class_name='PacWhite', snr_threshold_low=5)
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
+                      class_name='Tt', snr_threshold_low=5)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
-                      class_name='Gm', snr_threshold_low=5)
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    #                   class_name='Dc', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    #                   class_name='Dd', snr_threshold_low=5)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
-                      class_name='Gg', snr_threshold_low=5)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
-                      class_name='RoughToothed', snr_threshold_low=5)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
-                      class_name='Sperm', snr_threshold_low=5)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
-                      class_name='Striped', snr_threshold_low=5)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
-                      class_name='Mesoplodon', snr_threshold_low=5)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
-                      class_name='Beaked', snr_threshold_low=5)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
                       class_name='Melon', snr_threshold_low=5)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
-                      class_name='Tt', snr_threshold_low=5, snr_threshold_high=20)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
-                      class_name='Dc', snr_threshold_low=5, snr_threshold_high=20)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
-                      class_name='Dd', snr_threshold_low=5, snr_threshold_high=20)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
-                      class_name='Melon', snr_threshold_low=5, snr_threshold_high=20)
-
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
-                      class_name='Spinner', snr_threshold_low=5, snr_threshold_high=20)
-
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
+                      class_name='Spinner', snr_threshold_low=5)
 

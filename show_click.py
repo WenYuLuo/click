@@ -38,12 +38,12 @@ import math
 
 
 if __name__ == '__main__':
-    click_arr = np.load('/home/fish/ROBB/CNN_click/click/CNNDet/Sperm/Sperm whales_Bahamas(AUTEC)-Annotated/SpermWh_A2_030306-H16_short_N1707.npy')
+    click_arr = np.load('/home/fish/ROBB/CNN_click/click/A.npy')
     print(click_arr.shape)
     rand_index = np.random.permutation(click_arr.shape[0])
     for i in rand_index:
         click = click_arr[i, :]
-        plt.plot(np.arange(0,click_arr.shape[1]) / 192000, click)
+        plt.plot(np.arange(0, click_arr.shape[1]), click)
         plt.xlabel("Time(s)")
         plt.ylabel("Amplitude")
         plt.grid('True')  # 标尺，on：有，off:无。
