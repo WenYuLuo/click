@@ -51,7 +51,7 @@ def calcu_energy(x):
     return energy
 
 
-def run_cnn_detection(file_name, dst_path, tar_fs=192000, snr_threshold_low=5, snr_threshold_high=20):
+def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, save_npy=False, dst_path='', tar_fs=192000):
 
     """
         support the audio frame rate no bigger than 192000
@@ -235,35 +235,38 @@ def run_cnn_detection(file_name, dst_path, tar_fs=192000, snr_threshold_low=5, s
     # pl.plot(time, detected_visual)
     # pl.show()
 
-    for pos_tuple in detected_list:
-        temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
+    if save_npy:
+        for pos_tuple in detected_list:
+            temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
 
-        # temp_click = resample(temp_click, fs, tar_fs)
+            # temp_click = resample(temp_click, fs, tar_fs)
 
-        max_index = np.argmax(temp_click)
-        max_index += pos_tuple[0]
-        t_start = max_index - int(signal_len/2)
-        if t_start < 0:
-            t_start = 0
-        t_end = max_index + int(signal_len/2)
-        if t_end > len_audio:
-            break
-        click_data = audio_filted[t_start:t_end]
+            max_index = np.argmax(temp_click)
+            max_index += pos_tuple[0]
+            t_start = max_index - int(signal_len/2)
+            if t_start < 0:
+                t_start = 0
+            t_end = max_index + int(signal_len/2)
+            if t_end > len_audio:
+                break
+            click_data = audio_filted[t_start:t_end]
 
-        click_data = resample(click_data, fs, tar_fs)
+            click_data = resample(click_data, fs, tar_fs)
 
-        click_data = cut_data(click_data, signal_len)
+            click_data = cut_data(click_data, signal_len)
 
-        click_data = click_data.astype(np.short)
-        # print(click_data.shape)
-        click_arr.append(click_data)
-        count += 1
+            click_data = click_data.astype(np.short)
+            # print(click_data.shape)
+            click_arr.append(click_data)
+            count += 1
 
-    dst = "%(path)s/%(pre)s_N%(num)d.npy" \
-          % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
-    print(dst)
-    np.save(dst, np.array(click_arr, dtype=np.short))
+        dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+              % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
+        print(dst)
+        np.save(dst, np.array(click_arr, dtype=np.short))
     print("count = %(count)d" % {'count': count})
+
+    return detected_list, fs
 
 
 def cut_data(input_signal, out_len):
@@ -295,9 +298,9 @@ def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high
         dst_path = "./CNNDet/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
-
+        save_npy = True
         for file_name in wav_files:
-            run_cnn_detection(file_name, dst_path, tar_fs, snr_threshold_low, snr_threshold_high)
+            run_cnn_detection(file_name, snr_threshold_low, snr_threshold_high, save_npy, dst_path, tar_fs)
 
 
 if __name__ == '__main__':
