@@ -38,7 +38,7 @@ import math
 
 
 if __name__ == '__main__':
-    click_arr = np.load('/home/fish/ROBB/CNN_click/click/A.npy')
+    click_arr = np.load('/home/fish/ROBB/CNN_click/click/CNNClear/RightWhale/N_RightwhaleDolphin/Lb-070421-164216-Lb-B16h42m16s21apr2007y_N308.npy')
     print(click_arr.shape)
     rand_index = np.random.permutation(click_arr.shape[0])
     for i in rand_index:

@@ -32,15 +32,12 @@ def softmax(vector):
 
 
 def calcu_click_energy(x):
-    # x = high_pass_filter(x, )
     pow_x = x**2
-    # x_norm = np.linalg.norm(x, ord=2)**2
     start_idx = int(x.shape[1]/2)
-    # energy_impulse = 0
     half_size = 50
     size = 2 * half_size
     energy_impulse = np.sum(pow_x[0][start_idx-half_size:start_idx+half_size])
-    # print('size %g' % size)
+
     return energy_impulse/size
 
 
@@ -96,22 +93,23 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
 
     audio_filted = signal.filtfilt(b, a, audio)
     scale = (2 ** 15 - 1) / max(audio_filted)
-    for i in np.arange(audio_filted.size):
-        audio_filted[i] = audio_filted[i] * scale
+    audio_filted *= scale
+    # for i in np.arange(audio_filted.size):
+    #     audio_filted[i] = audio_filted[i] * scale
 
     # audio_norm = local_normalize(audio_filted)
     #
     # audio_norm = audio_norm[0]
     #
-    # time = np.arange(0, audio_filted.shape[0]) / fs
-    # # pl.plot(time, audio)
-    # # pl.show()
+    # time = np.arange(0, audio_filted.shape[0])
+    # # # pl.plot(time, audio)
+    # # # pl.show()
     # pl.plot(time, audio_filted)
-    # pl.title('high pass filter')
-    # pl.xlabel('time')
-    # # pl.show()
+    # # pl.title('high pass filter')
+    # # pl.xlabel('time')
+    # # # pl.show()
 
-    seg_length = 8000000
+    seg_length = 4000000
     data_seg = []
     if len_audio > seg_length:
         seg_num = math.ceil(len_audio / seg_length)
@@ -140,6 +138,8 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
     with tf.Session(config=config) as sess:
         saver = tf.train.import_meta_graph('params_cnn/allconv_cnn4click_norm_quater_manual.ckpt-300.meta')
         saver.restore(sess, 'params_cnn/allconv_cnn4click_norm_quater_manual.ckpt-300')
+        # saver = tf.train.import_meta_graph('params_cnn/allconv_cnn4click_norm_quater_manual_conv2_supplement.ckpt-300.meta')
+        # saver.restore(sess, 'params_cnn/allconv_cnn4click_norm_quater_manual_conv2_supplement.ckpt-300')
         # graph = tf.reset_default_graph()
         # 获取模型参数
         x = sess.graph.get_operation_by_name('x').outputs[0]
@@ -163,69 +163,123 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
             predict = np.argmax(y_out, axis=1)
             for j in range(len(predict)):
                 pro = y_out[j][predict[j]]
-                if predict[j] == click_label and pro > 0.9:  # and pro > 0.9:
+                if predict[j] == click_label:# and pro > 0.9:  # and pro > 0.9:
                     start_point = seg_length * i + 8 * j
                     end_point = start_point + 256
                     detected_visual[start_point:end_point] += 1
                     # num_detected = num_detected+1
                     # elif predict == 1:
                     #     detected_visual[start_point:end_point] -= 10
+    # pl.plot(time, detected_visual*max(audio_filted)/32)
+    # pl.show()
 
-    # detected click 定位
-    index_detected = np.where(detected_visual >= 1)[0]
-    if index_detected.size == 0:
-        print("count = %(count)d" % {'count': count})
-        return
-    detected_list = []
-    is_begin = False
-    pos_start = index_detected[0]
-    for i in range(len(index_detected)):
-        if not is_begin:
-            pos_start = index_detected[i]
-            is_begin = True
-        # 考虑到达list终点时的情况
-        if i+1 >= len(index_detected):
-            pos_end = index_detected[i]
-            detected_list.append((pos_start, pos_end+1))
-            break
-        if index_detected[i+1] - index_detected[i] > 1:
-            pos_end = index_detected[i]
-            detected_list.append((pos_start, pos_end+1))
-            is_begin = False
-        else:
-            continue
+    # # detected click 定位
+    # index_detected = np.where(detected_visual >= 8)[0]
+    # if index_detected.size == 0:
+    #     print("count = %(count)d" % {'count': count})
+    #     return
+    # detected_list = []
+    # is_begin = False
+    # pos_start = index_detected[0]
+    # for i in range(len(index_detected)):
+    #     if not is_begin:
+    #         pos_start = index_detected[i]
+    #         is_begin = True
+    #     # 考虑到达list终点时的情况
+    #     if i+1 >= len(index_detected):
+    #         pos_end = index_detected[i]
+    #         detected_list.append((pos_start, pos_end+1))
+    #         break
+    #     if index_detected[i+1] - index_detected[i] > 1:
+    #         pos_end = index_detected[i]
+    #         detected_list.append((pos_start, pos_end+1))
+    #         is_begin = False
+    #     else:
+    #         continue
+    detected_list = connected_component(detected_visual, threshold=1, len_threshold=64)
+    if detected_list == []:
+        print('no click was detected!')
+        return detected_list, fs, audio, audio_filted, detected_visual
 
     # debug: 未过滤检测click数
     print('未过滤click数： %d' % len(detected_list))
 
-    # 去掉低于10db的click
-    index_to_remove = []
-    for i in range(len(detected_list)):
-        detected_pos = detected_list[i]
-        detected_length = detected_pos[1] - detected_pos[0]
-        if detected_length < 256 + 8 * 8:
-            detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
-            index_to_remove.append(i)
-            continue
-        # snr estimate
-        click = audio_filted[detected_pos[0]:detected_pos[1] + 1]
-        detected_clicks_energy = calcu_click_energy(click.reshape(1, -1))
-        noise_estimate1 = audio_filted[detected_pos[0] - 256:detected_pos[0]]
-        noise_estimate2 = audio_filted[detected_pos[1] + 1:detected_pos[1] + 257]
-        noise_estimate = np.hstack((noise_estimate1, noise_estimate2))
-        noise_energy = calcu_energy(noise_estimate)
-        if noise_energy <= 0:
-            detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
-            index_to_remove.append(i)
-            continue
-        snr = 10 * math.log10(detected_clicks_energy / noise_energy)
-        if snr < snr_threshold_low or snr > snr_threshold_high:
-            detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
-            index_to_remove.append(i)
-    has_removed = 0
-    for i in index_to_remove:
-        detected_list.pop(i - has_removed)
-        has_removed = has_removed + 1
+    update_detected_list = []
+    if snr_threshold_low > 0:
+        print('启用snr过滤, snr_threshold_low=', snr_threshold_low)
+        # 去掉低于10db的click
+        index_to_remove = []
+        for i in range(len(detected_list)):
+            detected_pos = detected_list[i]
+            # detected_length = detected_pos[1] - detected_pos[0]
+            # if detected_length < 256 + 8 * 8:
+            #     detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
+            #     index_to_remove.append(i)
+            #     continue
+            ## snr estimate
+            click = audio_filted[detected_pos[0]:detected_pos[1] + 1]
+            tkeo = tkeo_algorithm(click)
+            tkeo_mean = np.mean(tkeo)
+            click_pos_list = connected_component(tkeo, threshold=3*tkeo_mean, len_threshold=0)
+            # print(len(click_pos_list))
+            # x = np.arange(0, tkeo.size)
+            # mean = np.ones(tkeo.size)*tkeo_mean
+            # pl.subplot(311)
+            # pl.plot(click)
+            # pl.subplot(312)
+            # pl.plot(tkeo)
+            # pl.plot(x, mean*3)
+            # pl.subplot(313)
+            # pl.plot(detected_visual[detected_pos[0]:detected_pos[1] + 1])
+            # pl.show()
+            tmp_pos = []
+            for pos in click_pos_list:
+                # detected_clicks_energy = calcu_click_energy(click.reshape(1, -1))
+                # max_index = np.argmax(click) + detected_pos[0]
+                # click = audio_filted[max_index-50:max_index+50]
+                # detected_clicks_energy = calcu_energy(click)
+                # detected_clicks_energy = audio_filted[max_index]**2 * 0.9
+                start = pos[0] + detected_pos[0] - 6
+                end = pos[1] + detected_pos[0] + 6
+                singel_click = audio_filted[start:end]
+                detected_clicks_energy = calcu_energy(singel_click)
+                if math.isnan(detected_clicks_energy):
+                    continue
+                noise_estimate1 = audio_filted[start - 512:start]
+                noise_estimate2 = audio_filted[end:end + 512]
+                noise_estimate = np.hstack((noise_estimate1, noise_estimate2))
+                noise_energy = calcu_energy(noise_estimate)
+                if noise_energy <= 0:
+                    # detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
+                    # index_to_remove.append(i)
+                    continue
+                snr = 10 * math.log10(detected_clicks_energy / noise_energy)
+                if snr < snr_threshold_low or snr > snr_threshold_high:
+                    # detected_visual[detected_pos[0]:detected_pos[1] + 1] = 0
+                    continue
+                    # index_to_remove.append(i)
+                if start-100 < 0:
+                    start = 0
+                else:
+                    start -= 100
+                if end + 100 > len_audio:
+                    end = len_audio
+                else:
+                    end += 100
+                ext_pos = (start-100, end+100)
+                tmp_pos.append(ext_pos)
+            if len(tmp_pos) >= 3:
+                update_detected_list.append(detected_pos)
+            else:
+                update_detected_list += tmp_pos
+            # has_removed = 0
+            # for i in index_to_remove:
+            #     detected_list.pop(i - has_removed)
+            #     has_removed = has_removed + 1
+    else:
+        update_detected_list = detected_list
+
+    print('过滤后剩余：', len(update_detected_list))
 
     # # debug
     # for i in detected_list:
@@ -236,7 +290,7 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
     # pl.show()
 
     if save_npy:
-        for pos_tuple in detected_list:
+        for pos_tuple in update_detected_list:
             temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
 
             # temp_click = resample(temp_click, fs, tar_fs)
@@ -264,9 +318,48 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
               % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
         print(dst)
         np.save(dst, np.array(click_arr, dtype=np.short))
-    print("count = %(count)d" % {'count': count})
+        print("count = %(count)d" % {'count': count})
 
-    return detected_list, fs
+    return update_detected_list, fs, audio, audio_filted, detected_visual
+
+
+def connected_component(array, threshold, len_threshold):
+    # detected click 定位
+    index_detected = np.where(array >= threshold)[0]
+    if index_detected.size == 0:
+        # print("count = %(count)d" % {'count': index_detected.size})
+        return []
+    component = []
+    is_begin = False
+    pos_start = index_detected[0]
+    for i in range(len(index_detected)):
+        if not is_begin:
+            pos_start = index_detected[i]
+            is_begin = True
+        # 考虑到达list终点时的情况
+        if i+1 >= len(index_detected):
+            pos_end = index_detected[i]
+            if pos_end+1 - pos_start >= len_threshold:
+                component.append((pos_start, pos_end+1))
+            break
+        if index_detected[i+1] - index_detected[i] > 1:
+            pos_end = index_detected[i]
+            if pos_end + 1 - pos_start >= len_threshold:
+                component.append((pos_start, pos_end+1))
+            is_begin = False
+        else:
+            continue
+    return component
+
+def tkeo_algorithm(xn):
+    length = len(xn)
+    xn_0 = xn[1:(length - 1)]
+    xn_1 = xn[0:(length - 2)]
+    xnp1 = xn[2:length]
+
+    tkeo = xn_0 * xn_0 - xnp1 * xn_1
+    tkeo = np.abs(tkeo)
+    return tkeo
 
 
 def cut_data(input_signal, out_len):

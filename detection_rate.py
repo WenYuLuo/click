@@ -17,11 +17,14 @@ class marked_pool(object):
                 a = max(position_start, marked_start)
                 b = min(position_end, marked_end)
                 if a < b:
-                    overlap_len = b-a
-                    overlap_rate = overlap_len/(marked_end-marked_start)
-                    if overlap_rate >= 0.1:
-                        self.isdetected[i] = 1
-                        break
+                    # overlap_len = b-a
+                    # overlap_rate = overlap_len/(marked_end-marked_start)
+                    # if overlap_rate >= 0.1:
+                    #     self.isdetected[i] = 1
+                    #     continue
+                    self.isdetected[i] = 1
+                    continue
+                    # break
                 if i == self.num_click-1:
                     false_positive += 1
         correct_detected = [1 for i in self.isdetected if i == 1]
