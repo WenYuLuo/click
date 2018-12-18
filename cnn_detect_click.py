@@ -6,7 +6,7 @@ from scipy import signal
 import tensorflow as tf
 import find_click
 from detect_click import resample, mkdir
-
+import time
 
 
 
@@ -57,6 +57,8 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
             :param tar_fs:输出信号采样率
     """
 
+    # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.gpu_options.per_process_gpu_memory_fraction = 1
@@ -86,6 +88,12 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
         return None
 
     len_audio = len(audio)
+
+    # cost time
+    start_t = time.time()
+    time_len = len_audio/fs
+    print('current audio length:', time_len)
+
     fl = fs/40
     # fs = 192000
     wn = 2*fl/fs
@@ -109,7 +117,7 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
     # # pl.xlabel('time')
     # # # pl.show()
 
-    seg_length = 4000000
+    seg_length = 192000
     data_seg = []
     if len_audio > seg_length:
         seg_num = math.ceil(len_audio / seg_length)
@@ -266,10 +274,14 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
                     end = len_audio
                 else:
                     end += 100
-                ext_pos = (start-100, end+100)
+                ext_pos = (start, end)
                 tmp_pos.append(ext_pos)
+            tmp_pos = merge_pos(tmp_pos)
+            if tmp_pos == []:
+                continue
             if len(tmp_pos) >= 3:
-                update_detected_list.append(detected_pos)
+                # update_detected_list.append(detected_pos)
+                update_detected_list += tmp_pos
             else:
                 update_detected_list += tmp_pos
             # has_removed = 0
@@ -280,6 +292,16 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
         update_detected_list = detected_list
 
     print('过滤后剩余：', len(update_detected_list))
+
+    # cost time
+    end_t = time.time()
+    cost_t = end_t - start_t
+    print('current audio\'s sample rate:', fs)
+    print('current audio length:', time_len)
+    real_time_ratio = cost_t/time_len
+    print('cost time:', cost_t)
+    print('real time ratio:', real_time_ratio)
+
 
     # # debug
     # for i in detected_list:
@@ -299,7 +321,7 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
             max_index += pos_tuple[0]
             t_start = max_index - int(signal_len/2)
             if t_start < 0:
-                t_start = 0
+                continue
             t_end = max_index + int(signal_len/2)
             if t_end > len_audio:
                 break
@@ -321,6 +343,25 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
         print("count = %(count)d" % {'count': count})
 
     return update_detected_list, fs, audio, audio_filted, detected_visual
+
+
+def merge_pos(pos):
+    m_pos = []
+    if pos == []:
+        return m_pos
+    cur = pos[0]
+    for i in range(len(pos)-1):
+        last = pos[i+1]
+        cur_mid = (cur[0]+cur[1])/2
+        last_mid = (last[0]+last[1])/2
+        if last_mid - cur_mid < 50:
+            cur = (cur[0], last[1])
+        else:
+            m_pos.append(cur)
+            # m_pos.append(last)
+            cur = last
+    m_pos.append(cur)
+    return m_pos
 
 
 def connected_component(array, threshold, len_threshold):
@@ -388,7 +429,7 @@ def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./CNNDet/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./CNNDet18/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
         save_npy = True
@@ -414,47 +455,62 @@ if __name__ == '__main__':
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
     #                   class_name='Gg')
     #
-    detect_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
-                      class_name='RightWhale', snr_threshold_low=7)
+    # detect_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
+    #                   class_name='RightWhale', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
+    #                   class_name='PacWhite', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
+    #                   class_name='Gm', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
+    #                   class_name='Gg', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
+    #                   class_name='RoughToothed', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
+    #                   class_name='Sperm', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
+    #                   class_name='Striped', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
+    #                   class_name='Mesoplodon', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
+    #                   class_name='Beaked', snr_threshold_low=7)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
+    #                   class_name='Melon', snr_threshold_low=7)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
-                      class_name='PacWhite', snr_threshold_low=7)
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
+    #                   class_name='Tt', snr_threshold_low=7, snr_threshold_high=20)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    #                   class_name='Dc', snr_threshold_low=7, snr_threshold_high=20)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    #                   class_name='Dd', snr_threshold_low=7, snr_threshold_high=20)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+    #                   class_name='Melon', snr_threshold_low=7, snr_threshold_high=20)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
+    #                   class_name='Spinner', snr_threshold_low=7, snr_threshold_high=20)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
-                      class_name='Gm', snr_threshold_low=7)
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
+                 class_name='Tt', snr_threshold_low=18, snr_threshold_high=120)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
-                      class_name='Gg', snr_threshold_low=7)
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    #              class_name='Dc', snr_threshold_low=18, snr_threshold_high=20)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    #              class_name='Dd', snr_threshold_low=18, snr_threshold_high=20)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
-                      class_name='RoughToothed', snr_threshold_low=7)
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
+                 class_name='Melon', snr_threshold_low=18, snr_threshold_high=120)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
-                      class_name='Sperm', snr_threshold_low=7)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
-                      class_name='Striped', snr_threshold_low=7)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
-                      class_name='Mesoplodon', snr_threshold_low=7)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
-                      class_name='Beaked', snr_threshold_low=7)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
-                      class_name='Melon', snr_threshold_low=7)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
-                      class_name='Tt', snr_threshold_low=7, snr_threshold_high=20)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
-                      class_name='Dc', snr_threshold_low=7, snr_threshold_high=20)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
-                      class_name='Dd', snr_threshold_low=7, snr_threshold_high=20)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
-                      class_name='Melon', snr_threshold_low=7, snr_threshold_high=20)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
-                      class_name='Spinner', snr_threshold_low=7, snr_threshold_high=20)
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
+                 class_name='Spinner', snr_threshold_low=18, snr_threshold_high=120)

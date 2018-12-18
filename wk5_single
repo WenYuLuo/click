@@ -1,0 +1,714 @@
+/home/fish/tensorflow/bin/python3.5 /home/fish/ROBB/CNN_click/click/wk5_classify_single.py
+=================round 0=================
+train cnn for one click ... ...
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Melon
+training set loading.......
+loaded clicks: 198408
+test set loading.......
+loading 061031
+loaded clicks: 5496
+crop training clicks...
+sampled from 198408 clicks
+crop testing clicks...
+sampled from 5496 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Spinner
+training set loading.......
+loaded clicks: 56129
+test set loading.......
+loading 061103
+loaded clicks: 13483
+crop training clicks...
+sampled from 56129 clicks
+crop testing clicks...
+sampled from 13483 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Tt
+training set loading.......
+loaded clicks: 135559
+test set loading.......
+loading 061021
+loaded clicks: 5089
+crop training clicks...
+sampled from 135559 clicks
+crop testing clicks...
+sampled from 5089 clicks
+(600000, 96)
+(24050, 96)
+2018-11-30 21:33:49.970284: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2018-11-30 21:33:50.180285: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 0 with properties: 
+name: GeForce GTX TITAN X major: 5 minor: 2 memoryClockRate(GHz): 1.076
+pciBusID: 0000:01:00.0
+totalMemory: 11.91GiB freeMemory: 11.52GiB
+2018-11-30 21:33:50.315372: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 1 with properties: 
+name: GeForce GTX TITAN X major: 5 minor: 2 memoryClockRate(GHz): 1.076
+pciBusID: 0000:02:00.0
+totalMemory: 11.92GiB freeMemory: 11.80GiB
+2018-11-30 21:33:50.315691: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Device peer to peer matrix
+2018-11-30 21:33:50.315732: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1051] DMA: 0 1 
+2018-11-30 21:33:50.315740: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1061] 0:   Y Y 
+2018-11-30 21:33:50.315746: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1061] 1:   Y Y 
+2018-11-30 21:33:50.315756: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX TITAN X, pci bus id: 0000:01:00.0, compute capability: 5.2)
+2018-11-30 21:33:50.315763: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+epoch : 1, training accuracy : 0.469448
+epoch : 2, training accuracy : 0.551362
+epoch : 3, training accuracy : 0.573687
+epoch : 4, training accuracy : 0.587085
+epoch : 5, training accuracy : 0.597288
+epoch : 6, training accuracy : 0.605218
+epoch : 7, training accuracy : 0.61265
+epoch : 8, training accuracy : 0.618632
+epoch : 9, training accuracy : 0.62472
+epoch : 10, training accuracy : 0.630217
+epoch : 11, training accuracy : 0.63503
+epoch : 12, training accuracy : 0.639997
+epoch : 13, training accuracy : 0.644885
+epoch : 14, training accuracy : 0.649418
+epoch : 15, training accuracy : 0.653353
+epoch : 16, training accuracy : 0.657042
+epoch : 17, training accuracy : 0.660862
+epoch : 18, training accuracy : 0.664512
+epoch : 19, training accuracy : 0.667618
+epoch : 20, training accuracy : 0.669803
+epoch : 21, training accuracy : 0.673397
+epoch : 22, training accuracy : 0.675897
+epoch : 23, training accuracy : 0.678127
+epoch : 24, training accuracy : 0.680515
+epoch : 25, training accuracy : 0.682528
+epoch : 26, training accuracy : 0.684677
+epoch : 27, training accuracy : 0.687257
+epoch : 28, training accuracy : 0.689558
+epoch : 29, training accuracy : 0.691593
+epoch : 30, training accuracy : 0.69274
+epoch : 31, training accuracy : 0.694997
+epoch : 32, training accuracy : 0.696577
+epoch : 33, training accuracy : 0.69852
+epoch : 34, training accuracy : 0.699817
+epoch : 35, training accuracy : 0.70103
+epoch : 36, training accuracy : 0.702733
+epoch : 37, training accuracy : 0.704328
+epoch : 38, training accuracy : 0.705978
+epoch : 39, training accuracy : 0.706597
+epoch : 40, training accuracy : 0.708217
+epoch : 41, training accuracy : 0.709272
+epoch : 42, training accuracy : 0.710253
+epoch : 43, training accuracy : 0.711632
+epoch : 44, training accuracy : 0.712898
+epoch : 45, training accuracy : 0.713777
+epoch : 46, training accuracy : 0.714772
+epoch : 47, training accuracy : 0.716548
+epoch : 48, training accuracy : 0.716633
+epoch : 49, training accuracy : 0.718065
+epoch : 50, training accuracy : 0.718698
+epoch : 51, training accuracy : 0.71968
+epoch : 52, training accuracy : 0.720708
+epoch : 53, training accuracy : 0.722042
+epoch : 54, training accuracy : 0.723148
+epoch : 55, training accuracy : 0.723783
+epoch : 56, training accuracy : 0.724535
+epoch : 57, training accuracy : 0.725555
+epoch : 58, training accuracy : 0.726045
+epoch : 59, training accuracy : 0.727087
+epoch : 60, training accuracy : 0.728
+epoch : 61, training accuracy : 0.72787
+epoch : 62, training accuracy : 0.729835
+epoch : 63, training accuracy : 0.730475
+epoch : 64, training accuracy : 0.730867
+epoch : 65, training accuracy : 0.731692
+epoch : 66, training accuracy : 0.732518
+epoch : 67, training accuracy : 0.733202
+epoch : 68, training accuracy : 0.73391
+epoch : 69, training accuracy : 0.734767
+epoch : 70, training accuracy : 0.735073
+epoch : 71, training accuracy : 0.735952
+epoch : 72, training accuracy : 0.736198
+epoch : 73, training accuracy : 0.737372
+epoch : 74, training accuracy : 0.737495
+epoch : 75, training accuracy : 0.737845
+epoch : 76, training accuracy : 0.738877
+epoch : 77, training accuracy : 0.739495
+epoch : 78, training accuracy : 0.740125
+epoch : 79, training accuracy : 0.741087
+epoch : 80, training accuracy : 0.741282
+epoch : 81, training accuracy : 0.741832
+epoch : 82, training accuracy : 0.74259
+epoch : 83, training accuracy : 0.743015
+epoch : 84, training accuracy : 0.743403
+epoch : 85, training accuracy : 0.743835
+epoch : 86, training accuracy : 0.74443
+epoch : 87, training accuracy : 0.745648
+epoch : 88, training accuracy : 0.745693
+epoch : 89, training accuracy : 0.746543
+epoch : 90, training accuracy : 0.746563
+epoch : 91, training accuracy : 0.747833
+epoch : 92, training accuracy : 0.748102
+epoch : 93, training accuracy : 0.748362
+epoch : 94, training accuracy : 0.748318
+epoch : 95, training accuracy : 0.74893
+epoch : 96, training accuracy : 0.750205
+epoch : 97, training accuracy : 0.75017
+epoch : 98, training accuracy : 0.750613
+epoch : 99, training accuracy : 0.751273
+epoch : 100, training accuracy : 0.751312
+epoch : 101, training accuracy : 0.751855
+epoch : 102, training accuracy : 0.752265
+epoch : 103, training accuracy : 0.752528
+epoch : 104, training accuracy : 0.647842
+test accuracy:  0.685
+batch test accuracy:  0.827
+[[544.   0.   5.]
+ [209. 991. 148.]
+ [ 31.  24. 453.]]
+label  0 acc =  0.9908925318761385
+label  1 acc =  0.7351632047477745
+label  2 acc =  0.8917322834645669
+=================round 1=================
+train cnn for one click ... ...
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Melon
+training set loading.......
+loaded clicks: 189901
+test set loading.......
+loading 061028
+loaded clicks: 14003
+crop training clicks...
+sampled from 189901 clicks
+crop testing clicks...
+sampled from 14003 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Spinner
+training set loading.......
+loaded clicks: 52697
+test set loading.......
+loading 061024
+loaded clicks: 16915
+crop training clicks...
+sampled from 52697 clicks
+crop testing clicks...
+sampled from 16915 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Tt
+training set loading.......
+loaded clicks: 135977
+test set loading.......
+loading 061102
+loaded clicks: 4671
+crop training clicks...
+sampled from 135977 clicks
+crop testing clicks...
+sampled from 4671 clicks
+(600000, 96)
+(35580, 96)
+2018-11-30 22:14:34.838869: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX TITAN X, pci bus id: 0000:01:00.0, compute capability: 5.2)
+2018-11-30 22:14:34.838917: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+epoch : 1, training accuracy : 0.504075
+epoch : 2, training accuracy : 0.580487
+epoch : 3, training accuracy : 0.602773
+epoch : 4, training accuracy : 0.616395
+epoch : 5, training accuracy : 0.626878
+epoch : 6, training accuracy : 0.635943
+epoch : 7, training accuracy : 0.643805
+epoch : 8, training accuracy : 0.65108
+epoch : 9, training accuracy : 0.657452
+epoch : 10, training accuracy : 0.662643
+epoch : 11, training accuracy : 0.668285
+epoch : 12, training accuracy : 0.672408
+epoch : 13, training accuracy : 0.677102
+epoch : 14, training accuracy : 0.679832
+epoch : 15, training accuracy : 0.683877
+epoch : 16, training accuracy : 0.687043
+epoch : 17, training accuracy : 0.690703
+epoch : 18, training accuracy : 0.693067
+epoch : 19, training accuracy : 0.695943
+epoch : 20, training accuracy : 0.69823
+epoch : 21, training accuracy : 0.700782
+epoch : 22, training accuracy : 0.70245
+epoch : 23, training accuracy : 0.705317
+epoch : 24, training accuracy : 0.707203
+epoch : 25, training accuracy : 0.709568
+epoch : 26, training accuracy : 0.711033
+epoch : 27, training accuracy : 0.712692
+epoch : 28, training accuracy : 0.71471
+epoch : 29, training accuracy : 0.716755
+epoch : 30, training accuracy : 0.71874
+epoch : 31, training accuracy : 0.72053
+epoch : 32, training accuracy : 0.721627
+epoch : 33, training accuracy : 0.72252
+epoch : 34, training accuracy : 0.724575
+epoch : 35, training accuracy : 0.725903
+epoch : 36, training accuracy : 0.727395
+epoch : 37, training accuracy : 0.728462
+epoch : 38, training accuracy : 0.730277
+epoch : 39, training accuracy : 0.731422
+epoch : 40, training accuracy : 0.731942
+epoch : 41, training accuracy : 0.73319
+epoch : 42, training accuracy : 0.734368
+epoch : 43, training accuracy : 0.735755
+epoch : 44, training accuracy : 0.736182
+epoch : 45, training accuracy : 0.737662
+epoch : 46, training accuracy : 0.739202
+epoch : 47, training accuracy : 0.739192
+epoch : 48, training accuracy : 0.740582
+epoch : 49, training accuracy : 0.741493
+epoch : 50, training accuracy : 0.742657
+epoch : 51, training accuracy : 0.743565
+epoch : 52, training accuracy : 0.744598
+epoch : 53, training accuracy : 0.745158
+epoch : 54, training accuracy : 0.745808
+epoch : 55, training accuracy : 0.746737
+epoch : 56, training accuracy : 0.748012
+epoch : 57, training accuracy : 0.74849
+epoch : 58, training accuracy : 0.749558
+epoch : 59, training accuracy : 0.750208
+epoch : 60, training accuracy : 0.750595
+epoch : 61, training accuracy : 0.751143
+epoch : 62, training accuracy : 0.75217
+epoch : 63, training accuracy : 0.753105
+epoch : 64, training accuracy : 0.75371
+epoch : 65, training accuracy : 0.754463
+epoch : 66, training accuracy : 0.75465
+epoch : 67, training accuracy : 0.75602
+epoch : 68, training accuracy : 0.755572
+epoch : 69, training accuracy : 0.75683
+epoch : 70, training accuracy : 0.757408
+epoch : 71, training accuracy : 0.758158
+epoch : 72, training accuracy : 0.758895
+epoch : 73, training accuracy : 0.759207
+epoch : 74, training accuracy : 0.759925
+epoch : 75, training accuracy : 0.760715
+epoch : 76, training accuracy : 0.761288
+epoch : 77, training accuracy : 0.762143
+epoch : 78, training accuracy : 0.761797
+epoch : 79, training accuracy : 0.763008
+epoch : 80, training accuracy : 0.763158
+epoch : 81, training accuracy : 0.763547
+epoch : 82, training accuracy : 0.764462
+epoch : 83, training accuracy : 0.764588
+epoch : 84, training accuracy : 0.76591
+epoch : 85, training accuracy : 0.766987
+epoch : 86, training accuracy : 0.766482
+epoch : 87, training accuracy : 0.767633
+epoch : 88, training accuracy : 0.767668
+epoch : 89, training accuracy : 0.767907
+epoch : 90, training accuracy : 0.768303
+epoch : 91, training accuracy : 0.769028
+epoch : 92, training accuracy : 0.769293
+epoch : 93, training accuracy : 0.58603
+test accuracy:  0.536
+batch test accuracy:  0.601
+[[990.  62. 348.]
+ [406. 821. 464.]
+ [ 78.  63. 326.]]
+label  0 acc =  0.7071428571428572
+label  1 acc =  0.48551153163808397
+label  2 acc =  0.6980728051391863
+=================round 2=================
+train cnn for one click ... ...
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Melon
+training set loading.......
+loaded clicks: 188758
+test set loading.......
+loading 061104
+loaded clicks: 15146
+crop training clicks...
+sampled from 188758 clicks
+crop testing clicks...
+sampled from 15146 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Spinner
+training set loading.......
+loaded clicks: 63776
+test set loading.......
+loading 061102
+loaded clicks: 5836
+crop training clicks...
+sampled from 63776 clicks
+crop testing clicks...
+sampled from 5836 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Tt
+training set loading.......
+loaded clicks: 137445
+test set loading.......
+loading 061028
+loaded clicks: 3203
+crop training clicks...
+sampled from 137445 clicks
+crop testing clicks...
+sampled from 3203 clicks
+(600000, 96)
+(24170, 96)
+2018-11-30 22:51:56.836824: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX TITAN X, pci bus id: 0000:01:00.0, compute capability: 5.2)
+2018-11-30 22:51:56.836849: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+epoch : 1, training accuracy : 0.479573
+epoch : 2, training accuracy : 0.559332
+epoch : 3, training accuracy : 0.583653
+epoch : 4, training accuracy : 0.598693
+epoch : 5, training accuracy : 0.609823
+epoch : 6, training accuracy : 0.61786
+epoch : 7, training accuracy : 0.624977
+epoch : 8, training accuracy : 0.631673
+epoch : 9, training accuracy : 0.63799
+epoch : 10, training accuracy : 0.643658
+epoch : 11, training accuracy : 0.648257
+epoch : 12, training accuracy : 0.652525
+epoch : 13, training accuracy : 0.656313
+epoch : 14, training accuracy : 0.660095
+epoch : 15, training accuracy : 0.663817
+epoch : 16, training accuracy : 0.667587
+epoch : 17, training accuracy : 0.670173
+epoch : 18, training accuracy : 0.67277
+epoch : 19, training accuracy : 0.675783
+epoch : 20, training accuracy : 0.678058
+epoch : 21, training accuracy : 0.680117
+epoch : 22, training accuracy : 0.682535
+epoch : 23, training accuracy : 0.685085
+epoch : 24, training accuracy : 0.686937
+epoch : 25, training accuracy : 0.68963
+epoch : 26, training accuracy : 0.691228
+epoch : 27, training accuracy : 0.692488
+epoch : 28, training accuracy : 0.695127
+epoch : 29, training accuracy : 0.696673
+epoch : 30, training accuracy : 0.697833
+epoch : 31, training accuracy : 0.699733
+epoch : 32, training accuracy : 0.70144
+epoch : 33, training accuracy : 0.703038
+epoch : 34, training accuracy : 0.704428
+epoch : 35, training accuracy : 0.705612
+epoch : 36, training accuracy : 0.706582
+epoch : 37, training accuracy : 0.708163
+epoch : 38, training accuracy : 0.708813
+epoch : 39, training accuracy : 0.710787
+epoch : 40, training accuracy : 0.71224
+epoch : 41, training accuracy : 0.712782
+epoch : 42, training accuracy : 0.713307
+epoch : 43, training accuracy : 0.714898
+epoch : 44, training accuracy : 0.715458
+epoch : 45, training accuracy : 0.716502
+epoch : 46, training accuracy : 0.717518
+epoch : 47, training accuracy : 0.718067
+epoch : 48, training accuracy : 0.71914
+epoch : 49, training accuracy : 0.72051
+epoch : 50, training accuracy : 0.721127
+epoch : 51, training accuracy : 0.721688
+epoch : 52, training accuracy : 0.722737
+epoch : 53, training accuracy : 0.723757
+epoch : 54, training accuracy : 0.724907
+epoch : 55, training accuracy : 0.72539
+epoch : 56, training accuracy : 0.7264
+epoch : 57, training accuracy : 0.727225
+epoch : 58, training accuracy : 0.727687
+epoch : 59, training accuracy : 0.728807
+epoch : 60, training accuracy : 0.728467
+epoch : 61, training accuracy : 0.729975
+epoch : 62, training accuracy : 0.730188
+epoch : 63, training accuracy : 0.730523
+epoch : 64, training accuracy : 0.732415
+epoch : 65, training accuracy : 0.732563
+epoch : 66, training accuracy : 0.733622
+epoch : 67, training accuracy : 0.734033
+epoch : 68, training accuracy : 0.73476
+epoch : 69, training accuracy : 0.735437
+epoch : 70, training accuracy : 0.736288
+epoch : 71, training accuracy : 0.736617
+epoch : 72, training accuracy : 0.73748
+epoch : 73, training accuracy : 0.737873
+epoch : 74, training accuracy : 0.738115
+epoch : 75, training accuracy : 0.739355
+epoch : 76, training accuracy : 0.740192
+epoch : 77, training accuracy : 0.74008
+epoch : 78, training accuracy : 0.740928
+epoch : 79, training accuracy : 0.741833
+epoch : 80, training accuracy : 0.741667
+epoch : 81, training accuracy : 0.742893
+epoch : 82, training accuracy : 0.743263
+epoch : 83, training accuracy : 0.743907
+epoch : 84, training accuracy : 0.743852
+epoch : 85, training accuracy : 0.744657
+epoch : 86, training accuracy : 0.745843
+epoch : 87, training accuracy : 0.745253
+epoch : 88, training accuracy : 0.746643
+epoch : 89, training accuracy : 0.746927
+epoch : 90, training accuracy : 0.747683
+epoch : 91, training accuracy : 0.747907
+epoch : 92, training accuracy : 0.74827
+epoch : 93, training accuracy : 0.749352
+epoch : 94, training accuracy : 0.749642
+epoch : 95, training accuracy : 0.749968
+epoch : 96, training accuracy : 0.750157
+epoch : 97, training accuracy : 0.75167
+epoch : 98, training accuracy : 0.751213
+epoch : 99, training accuracy : 0.751765
+epoch : 100, training accuracy : 0.461977
+test accuracy:  0.594
+batch test accuracy:  0.674
+[[1051.  118.  345.]
+ [ 206.  293.   84.]
+ [  26.    9.  285.]]
+label  0 acc =  0.6941875825627477
+label  1 acc =  0.5025728987993139
+label  2 acc =  0.890625
+=================round 3=================
+train cnn for one click ... ...
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Melon
+training set loading.......
+loaded clicks: 201794
+test set loading.......
+loading 061027
+loaded clicks: 2110
+crop training clicks...
+sampled from 201794 clicks
+crop testing clicks...
+sampled from 2110 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Spinner
+training set loading.......
+loaded clicks: 48362
+test set loading.......
+loading 061021
+loaded clicks: 21250
+crop training clicks...
+sampled from 48362 clicks
+crop testing clicks...
+sampled from 21250 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Tt
+training set loading.......
+loaded clicks: 130903
+test set loading.......
+loading 061026
+loaded clicks: 9745
+crop training clicks...
+sampled from 130903 clicks
+crop testing clicks...
+sampled from 9745 clicks
+(600000, 96)
+(33100, 96)
+2018-11-30 23:31:22.047901: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX TITAN X, pci bus id: 0000:01:00.0, compute capability: 5.2)
+2018-11-30 23:31:22.047929: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+epoch : 1, training accuracy : 0.49698
+epoch : 2, training accuracy : 0.571263
+epoch : 3, training accuracy : 0.589908
+epoch : 4, training accuracy : 0.602005
+epoch : 5, training accuracy : 0.612315
+epoch : 6, training accuracy : 0.620555
+epoch : 7, training accuracy : 0.627948
+epoch : 8, training accuracy : 0.635102
+epoch : 9, training accuracy : 0.641167
+epoch : 10, training accuracy : 0.647667
+epoch : 11, training accuracy : 0.652545
+epoch : 12, training accuracy : 0.658163
+epoch : 13, training accuracy : 0.662742
+epoch : 14, training accuracy : 0.666447
+epoch : 15, training accuracy : 0.66945
+epoch : 16, training accuracy : 0.67335
+epoch : 17, training accuracy : 0.676855
+epoch : 18, training accuracy : 0.679853
+epoch : 19, training accuracy : 0.682605
+epoch : 20, training accuracy : 0.685863
+epoch : 21, training accuracy : 0.687775
+epoch : 22, training accuracy : 0.690352
+epoch : 23, training accuracy : 0.692988
+epoch : 24, training accuracy : 0.694268
+epoch : 25, training accuracy : 0.697088
+epoch : 26, training accuracy : 0.698623
+epoch : 27, training accuracy : 0.700612
+epoch : 28, training accuracy : 0.702865
+epoch : 29, training accuracy : 0.704895
+epoch : 30, training accuracy : 0.706303
+epoch : 31, training accuracy : 0.707525
+epoch : 32, training accuracy : 0.709775
+epoch : 33, training accuracy : 0.711153
+epoch : 34, training accuracy : 0.712527
+epoch : 35, training accuracy : 0.713318
+epoch : 36, training accuracy : 0.715482
+epoch : 37, training accuracy : 0.716572
+epoch : 38, training accuracy : 0.718157
+epoch : 39, training accuracy : 0.719187
+epoch : 40, training accuracy : 0.720865
+epoch : 41, training accuracy : 0.720862
+epoch : 42, training accuracy : 0.72264
+epoch : 43, training accuracy : 0.72388
+epoch : 44, training accuracy : 0.724822
+epoch : 45, training accuracy : 0.725413
+epoch : 46, training accuracy : 0.727043
+epoch : 47, training accuracy : 0.728365
+epoch : 48, training accuracy : 0.728528
+epoch : 49, training accuracy : 0.72991
+epoch : 50, training accuracy : 0.730532
+epoch : 51, training accuracy : 0.731908
+epoch : 52, training accuracy : 0.732677
+epoch : 53, training accuracy : 0.733632
+epoch : 54, training accuracy : 0.7342
+epoch : 55, training accuracy : 0.734997
+epoch : 56, training accuracy : 0.735658
+epoch : 57, training accuracy : 0.736237
+epoch : 58, training accuracy : 0.737473
+epoch : 59, training accuracy : 0.737667
+epoch : 60, training accuracy : 0.739318
+epoch : 61, training accuracy : 0.739317
+epoch : 62, training accuracy : 0.739892
+epoch : 63, training accuracy : 0.741185
+epoch : 64, training accuracy : 0.740962
+epoch : 65, training accuracy : 0.742715
+epoch : 66, training accuracy : 0.743273
+epoch : 67, training accuracy : 0.743823
+epoch : 68, training accuracy : 0.744702
+epoch : 69, training accuracy : 0.74485
+epoch : 70, training accuracy : 0.7454
+epoch : 71, training accuracy : 0.746657
+epoch : 72, training accuracy : 0.747407
+epoch : 73, training accuracy : 0.747637
+epoch : 74, training accuracy : 0.747813
+epoch : 75, training accuracy : 0.748702
+epoch : 76, training accuracy : 0.749648
+epoch : 77, training accuracy : 0.75045
+epoch : 78, training accuracy : 0.751242
+epoch : 79, training accuracy : 0.751352
+epoch : 80, training accuracy : 0.751805
+epoch : 81, training accuracy : 0.752432
+epoch : 82, training accuracy : 0.753228
+epoch : 83, training accuracy : 0.753845
+epoch : 84, training accuracy : 0.492863
+test accuracy:  0.525
+batch test accuracy:  0.592
+[[ 190.   19.    2.]
+ [  41. 1456.  628.]
+ [ 302.  359.  313.]]
+label  0 acc =  0.9004739336492891
+label  1 acc =  0.6851764705882353
+label  2 acc =  0.3213552361396304
+=================round 4=================
+train cnn for one click ... ...
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Melon
+training set loading.......
+loaded clicks: 181789
+test set loading.......
+loading 061018
+loaded clicks: 22115
+crop training clicks...
+sampled from 181789 clicks
+crop testing clicks...
+sampled from 22115 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Spinner
+training set loading.......
+loaded clicks: 52697
+test set loading.......
+loading 061024
+loaded clicks: 16915
+crop training clicks...
+sampled from 52697 clicks
+crop testing clicks...
+sampled from 16915 clicks
+/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Tt
+training set loading.......
+loaded clicks: 129405
+test set loading.......
+loading 061017
+loaded clicks: 11243
+crop training clicks...
+sampled from 129405 clicks
+crop testing clicks...
+sampled from 11243 clicks
+(600000, 96)
+(50260, 96)
+2018-12-01 00:05:13.841132: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX TITAN X, pci bus id: 0000:01:00.0, compute capability: 5.2)
+2018-12-01 00:05:13.841159: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+epoch : 1, training accuracy : 0.515993
+epoch : 2, training accuracy : 0.58813
+epoch : 3, training accuracy : 0.610998
+epoch : 4, training accuracy : 0.625387
+epoch : 5, training accuracy : 0.637182
+epoch : 6, training accuracy : 0.647082
+epoch : 7, training accuracy : 0.655275
+epoch : 8, training accuracy : 0.662285
+epoch : 9, training accuracy : 0.669447
+epoch : 10, training accuracy : 0.675948
+epoch : 11, training accuracy : 0.681548
+epoch : 12, training accuracy : 0.685723
+epoch : 13, training accuracy : 0.689415
+epoch : 14, training accuracy : 0.693513
+epoch : 15, training accuracy : 0.696398
+epoch : 16, training accuracy : 0.699868
+epoch : 17, training accuracy : 0.703678
+epoch : 18, training accuracy : 0.705762
+epoch : 19, training accuracy : 0.708878
+epoch : 20, training accuracy : 0.711263
+epoch : 21, training accuracy : 0.713712
+epoch : 22, training accuracy : 0.715728
+epoch : 23, training accuracy : 0.718715
+epoch : 24, training accuracy : 0.720308
+epoch : 25, training accuracy : 0.722458
+epoch : 26, training accuracy : 0.724237
+epoch : 27, training accuracy : 0.72572
+epoch : 28, training accuracy : 0.728052
+epoch : 29, training accuracy : 0.729982
+epoch : 30, training accuracy : 0.73103
+epoch : 31, training accuracy : 0.73361
+epoch : 32, training accuracy : 0.734747
+epoch : 33, training accuracy : 0.73579
+epoch : 34, training accuracy : 0.737665
+epoch : 35, training accuracy : 0.739142
+epoch : 36, training accuracy : 0.739973
+epoch : 37, training accuracy : 0.741505
+epoch : 38, training accuracy : 0.742873
+epoch : 39, training accuracy : 0.743748
+epoch : 40, training accuracy : 0.74454
+epoch : 41, training accuracy : 0.746012
+epoch : 42, training accuracy : 0.746743
+epoch : 43, training accuracy : 0.747843
+epoch : 44, training accuracy : 0.749328
+epoch : 45, training accuracy : 0.749907
+epoch : 46, training accuracy : 0.751068
+epoch : 47, training accuracy : 0.751677
+epoch : 48, training accuracy : 0.75256
+epoch : 49, training accuracy : 0.754057
+epoch : 50, training accuracy : 0.755068
+epoch : 51, training accuracy : 0.756035
+epoch : 52, training accuracy : 0.756703
+epoch : 53, training accuracy : 0.758032
+epoch : 54, training accuracy : 0.758753
+epoch : 55, training accuracy : 0.75988
+epoch : 56, training accuracy : 0.75982
+epoch : 57, training accuracy : 0.761147
+epoch : 58, training accuracy : 0.761698
+epoch : 59, training accuracy : 0.76268
+epoch : 60, training accuracy : 0.763358
+epoch : 61, training accuracy : 0.763818
+epoch : 62, training accuracy : 0.764277
+epoch : 63, training accuracy : 0.76516
+epoch : 64, training accuracy : 0.765567
+epoch : 65, training accuracy : 0.76665
+epoch : 66, training accuracy : 0.76734
+epoch : 67, training accuracy : 0.768538
+epoch : 68, training accuracy : 0.768563
+epoch : 69, training accuracy : 0.769712
+epoch : 70, training accuracy : 0.770675
+epoch : 71, training accuracy : 0.770653
+epoch : 72, training accuracy : 0.771467
+epoch : 73, training accuracy : 0.771952
+epoch : 74, training accuracy : 0.772548
+epoch : 75, training accuracy : 0.77336
+epoch : 76, training accuracy : 0.77413
+epoch : 77, training accuracy : 0.773915
+epoch : 78, training accuracy : 0.77514
+epoch : 79, training accuracy : 0.7756
+epoch : 80, training accuracy : 0.776265
+epoch : 81, training accuracy : 0.776942
+epoch : 82, training accuracy : 0.77771
+epoch : 83, training accuracy : 0.77799
+epoch : 84, training accuracy : 0.778685
+epoch : 85, training accuracy : 0.77973
+epoch : 86, training accuracy : 0.77971
+epoch : 87, training accuracy : 0.779772
+epoch : 88, training accuracy : 0.780503
+epoch : 89, training accuracy : 0.780082
+epoch : 90, training accuracy : 0.782268
+epoch : 91, training accuracy : 0.781778
+epoch : 92, training accuracy : 0.782658
+epoch : 93, training accuracy : 0.782598
+epoch : 94, training accuracy : 0.783858
+epoch : 95, training accuracy : 0.7842
+epoch : 96, training accuracy : 0.71192
+test accuracy:  0.476
+batch test accuracy:  0.486
+[[ 892.   24. 1295.]
+ [ 428.  782.  481.]
+ [  72.  284.  768.]]
+label  0 acc =  0.40343735866123925
+label  1 acc =  0.462448255470136
+label  2 acc =  0.6832740213523132
+
+Process finished with exit code 0
+

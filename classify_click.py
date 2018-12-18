@@ -259,7 +259,6 @@ def load_npy_data(batch_num=20, n_total=500):
         label = np.zeros(n_class)
         label[c] = 1
 
-        # xs = np.empty((0, 256))
         xs = np.empty((0, 320))
 
         count = 0
@@ -268,22 +267,8 @@ def load_npy_data(batch_num=20, n_total=500):
             npy = npy_files[i]
             print('loading %s' % npy)
             npy_data = np.load(npy)
-
-            # x = np.arange(0, 320)
-            # plt.plot(x, npy_data[0])
-            # plt.show()
-
             if npy_data.shape[0] == 0:
                 continue
-            # npy_data = np.divide(npy_data, 2**10)
-            # energy = np.sqrt(np.sum(npy_data**2, 1))
-            # energy = np.tile(energy, (npy_data.shape[1], 1))
-            # energy = energy.transpose()
-            # npy_data = np.divide(npy_data, energy)
-
-            # plt.plot(x, npy_data[0])
-            # plt.show()
-
             xs = np.vstack((xs, npy_data))
             count += npy_data.shape[0]
             # if count >= batch_num * n_total:
