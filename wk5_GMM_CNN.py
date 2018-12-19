@@ -214,7 +214,7 @@ def train_gmm(train_dict_in, test_dict, batch_num=20):
         if np.equal(np.argmax(prob), np.argmax(ref_y)):
             correct_cout += 1
         batch_index += 1
-    # print('batch test accuracy: ', round(correct_cout / test_cout, 3))
+    print('GMM test accuracy: ', round(correct_cout / test_cout, 3))
     print(confusion_mat)
     total_sample = np.sum(confusion_mat, 1)
     acc_list = []
@@ -255,7 +255,7 @@ def split_data(xs):
     return xs0, xs1
 
 
-def spectrum_crop(xs, batch_num, n_total, key):
+def spectrum_crop(xs, batch_num, n_total):
     num = xs.shape[0]
     rc_train_list = []
 
@@ -324,9 +324,9 @@ def feature_extractor_CNN(train_dict, test_dict, batch_num, n_total):
         label = np.zeros(n_class)
         label[c] = 1
         # print('cnn crop training clicks...')
-        temp_train_xs = spectrum_crop(xs, batch_num, n_total, key)
+        temp_train_xs = spectrum_crop(xs, batch_num, n_total)
         # print('crop testing clicks...')
-        temp_test_xs = spectrum_crop(txs, batch_num, n_total=0, key=key)
+        temp_test_xs = spectrum_crop(txs, batch_num, n_total=0)
 
         temp_train_ys = np.tile(label, (len(temp_train_xs), 1))
         temp_test_ys = np.tile(label, (len(temp_test_xs), 1))
