@@ -655,12 +655,12 @@ def train_cnn(train_dict, test_dict, batch_num=20, n_total=500):
                                                                               joint_train: False})
                 current_acc += acc
                 step += 1
-            current_acc = float(current_acc / step)
+            current_acc = float(current_acc / step)git
             print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
             if current_acc > max_acc:
                 max_acc = current_acc
                 saver.save(sess, "params/cnn_net_lwy.ckpt")
-                if max_acc > 0.97:
+                if max_acc > 0.95:
                     break
             if max_acc - current_acc > 0.05:
                 break
