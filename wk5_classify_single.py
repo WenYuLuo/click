@@ -45,7 +45,7 @@ def random_crop(xs, batch_num, n_total, key):
 
     for i in range(0, n_total):
         # for j in range(batch_num * i, batch_num * (i + 1)):
-
+        bxs = np.empty((0, 96))
         j = batch_num * i
         while j >= (batch_num * i) and j < (batch_num * (i + 1)):
             index = j % xs.shape[0]
@@ -62,10 +62,10 @@ def random_crop(xs, batch_num, n_total, key):
             crop_x = np.reshape(crop_x, [1, 96])
 
             crop_x = energy_normalize(crop_x)
-            rc_train_list.append(crop_x)
+            bxs = np.vstack((bxs, crop_x))
             j += 1
-
-    print('sampled from %d clicks' % xs.shape[0])
+        rc_train_list.append(bxs)
+    # print('sampled from %d clicks' % xs.shape[0])
     return rc_train_list
 
 
@@ -132,14 +132,15 @@ def load_npy_data(batch_num=20, n_total=500):
     dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Spinner"
     dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Tt"
 
+    train_dict = {'0': None, '1': None, '2': None}
 
     n_class = len(dict)
     # train_xs = np.empty((0, 96))
-    train_ys = np.empty((0, n_class))
+    # train_ys = np.empty((0, n_class))
     # test_xs = np.empty((0, 96))
     test_ys = np.empty((0, n_class))
 
-    train_xs = []
+    # train_xs = []
     # train_ys = []
     test_xs = []
     # test_ys = []
@@ -200,17 +201,21 @@ def load_npy_data(batch_num=20, n_total=500):
         print('crop testing clicks...')
         temp_test_xs = random_crop(txs, batch_num, n_total=0, key=key)
 
-        temp_train_ys = np.tile(label, (len(temp_train_xs), 1))
+        train_dict[key] = np.array(temp_train_xs)
         temp_test_ys = np.tile(label, (len(temp_test_xs), 1))
-        train_xs += temp_train_xs
-        train_ys = np.vstack((train_ys, temp_train_ys))
         test_xs += temp_test_xs
         test_ys = np.vstack((test_ys, temp_test_ys))
-    train_xs = np.array(train_xs)
+
+        # temp_train_ys = np.tile(label, (len(temp_train_xs), 1))
+        # temp_test_ys = np.tile(label, (len(temp_test_xs), 1))
+        # train_xs += temp_train_xs
+        # train_ys = np.vstack((train_ys, temp_train_ys))
+        # test_xs += temp_test_xs
+        # test_ys = np.vstack((test_ys, temp_test_ys))
+    # train_xs = np.array(train_xs)
     test_xs = np.array(test_xs)
 
-    return train_xs, train_ys, test_xs, test_ys
-
+    return train_dict, test_xs, test_ys
 
 
 def shufflelists(xs, ys, num):
@@ -238,21 +243,74 @@ def shufflebatch(xs, ys, num):
             batch_ys = np.vstack((batch_ys, ys[ri[j]]))
         yield batch_xs, batch_ys
 
+
+def shufflesample(train_dict, n_feature, n_class, batch_size):
+    xs = np.empty((0, n_feature))
+    ys = np.empty((0, n_class))
+    for key in train_dict:
+        c = int(key)
+        label = np.zeros(n_class)
+        label[c] = 1
+        temp_train = train_dict[key]
+        temp_train = np.reshape(temp_train, (-1, n_feature))
+        xs = np.vstack((xs, temp_train))
+        temp_train_ys = np.tile(label, (temp_train.shape[0], 1))
+        ys = np.vstack((ys, temp_train_ys))
+    shape = xs.shape
+    # print(shape)
+    ri = np.random.permutation(shape[0])
+    num_batch = int(shape[0] / batch_size)
+    for i in range(num_batch):
+        batch_xs = np.empty((0, xs.shape[1]))
+        batch_ys = np.empty((0, ys.shape[1]))
+        for j in range(i * batch_size, (i + 1) * batch_size):
+            batch_xs = np.vstack((batch_xs, xs[ri[j]]))
+            batch_ys = np.vstack((batch_ys, ys[ri[j]]))
+        yield batch_xs, batch_ys
+
+
+def shuffle_lstm_batch(train_dict, n_feature, batch_size):
+    ys = np.empty((0, n_class))
+    xs = []
+    for key in train_dict:
+        c = int(key)
+        label = np.zeros(n_class)
+        label[c] = 1
+        temp_train = train_dict[key]
+        xs += temp_train.tolist()
+        temp_train_ys = np.tile(label, (temp_train.shape[0], 1))
+        ys = np.vstack((ys, temp_train_ys))
+    xs = np.array(xs)
+    shape = xs.shape
+    # print(shape)
+    ri = np.random.permutation(shape[0])
+    num_batch = int(shape[0] / batch_size)
+    for i in range(num_batch):
+        batch_xs = np.empty((0, n_feature))
+        batch_ys = np.empty((0, ys.shape[1]))
+        for j in range(i * batch_size, (i + 1) * batch_size):
+            batch_xs = np.vstack((batch_xs, np.reshape(xs[ri[j]], (-1, n_feature))))
+            batch_ys = np.vstack((batch_ys, ys[ri[j]]))
+        yield batch_xs, batch_ys
+
+
 from tensorflow.contrib.layers.python.layers import initializers
+
 
 def train_cnn(n_class, batch_num=20, n_total=500):
 
     print("train cnn for one click ... ...")
 
     # train_xs, train_ys, test_xs, test_ys = load_data(data_path, n_class, batch_num, n_total)
-    train_xs, train_ys, test_xs, test_ys = load_npy_data(batch_num, n_total)
+    train_dict, test_xs, test_ys = load_npy_data(batch_num, n_total)
     # train_xs, train_ys, test_xs, test_ys = load_lwy_data(batch_num, n_total)
 
-    print(train_xs.shape)
+    print(train_dict['0'].shape)
     print(test_xs.shape)
 
     input_size = 96
 
+    tf.reset_default_graph()
     x = tf.placeholder("float", [None, input_size])
     y_ = tf.placeholder("float", [None, n_class])
 
@@ -296,16 +354,23 @@ def train_cnn(n_class, batch_num=20, n_total=500):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
     # lstm
-    lstm_cell = tf.nn.rnn_cell.LSTMCell(num_units=128, use_peepholes=True,
+    lstm_input = tf.placeholder("float", [None, 256])
+    lstm_input_reshape = tf.reshape(lstm_input, [-1, batch_num, 256])
+    # lstm_input_reshape = tf.reshape(h_fc1, [-1, batch_num, 256])
+    lstm_cell = tf.nn.rnn_cell.LSTMCell(num_units=512, use_peepholes=True,
                                         initializer=initializers.xavier_initializer(),
                                         num_proj=n_class)
-    BATCH_SIZE = 128
+    BATCH_SIZE = 100
     init_state = lstm_cell.zero_state(batch_size=BATCH_SIZE, dtype=tf.float32)
-    outputs, states = tf.nn.dynamic_rnn(cell=lstm_cell, inputs=h_fc1, initial_state=init_state, dtype=tf.float32)
+    outputs, states = tf.nn.dynamic_rnn(cell=lstm_cell, inputs=lstm_input_reshape, initial_state=init_state, dtype=tf.float32)
     h = outputs[:, -1, :]
-    cross_entropy_lstm = -tf.reduce_sum(y_ * tf.log(h))
-    lstm_optimizer=tf.train.AdamOptimizer(1e-4).minimize(loss=cross_entropy_lstm)
-    correct_prediction_lstm = tf.equal(tf.argmax(h, 1), tf.argmax(y_, 1))
+    output = tf.nn.softmax(h)
+    # W = weight_variable([num_units, D_label])
+    # b = bias_variable([D_label])
+    # output = tf.nn.softmax(tf.matmul(rnn, W) + b)
+    cross_entropy_lstm = -tf.reduce_sum(y_ * tf.log(output))
+    lstm_optimizer=tf.train.AdamOptimizer(7e-5).minimize(loss=cross_entropy_lstm)
+    correct_prediction_lstm = tf.equal(tf.argmax(output, 1), tf.argmax(y_, 1))
     accuracy_lstm = tf.reduce_mean(tf.cast(correct_prediction_lstm, "float"))
 
     init = tf.global_variables_initializer()
@@ -318,12 +383,12 @@ def train_cnn(n_class, batch_num=20, n_total=500):
         for i in range(1000):
             current_acc = 0
             step = 0
-            for bxs, bys in shufflebatch(train_xs, train_ys, 160):
+            for bxs, bys in shufflesample(train_dict, n_feature=input_size, n_class=n_class, batch_size=160):
                 m, acc = sess.run((train_step, accuracy), feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
                 current_acc += acc
                 step += 1
             current_acc = float(current_acc/step)
-            # print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
+            print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
             if current_acc > max_acc:
                 max_acc = current_acc
                 saver.save(sess, "params/cnn_net_lwy.ckpt")
@@ -336,85 +401,28 @@ def train_cnn(n_class, batch_num=20, n_total=500):
 
         sample_num = test_xs.shape[0]
 
-        # correct_cout = 0
-        # for j in range(0, sample_num):
-        #     txs = test_xs[j]
-        #     txs = np.reshape(txs, [1, input_size])
-        #     out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-        #     if np.equal(np.argmax(out_y), np.argmax(test_ys[j])):
-        #         correct_cout += 1
-        #
-        # print('test accuracy: ', round(correct_cout / sample_num, 3))
-
-        # train_num = train_xs.shape[0]
-        # prob_mat = np.zeros((n_class, n_class))
-        # correct_cout = 0
-        # for j in range(0, train_num):
-        #     txs = train_xs[j]
-        #     txs = np.reshape(txs, [1, 96])
-        #     out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-        #     predict_t = np.argmax(out_y)
-        #     ground_t = np.argmax(train_ys[j])
-        #     prob_mat[ground_t, predict_t] += 1
-        #     if np.equal(predict_t, ground_t):
-        #         correct_cout += 1
-        # print('train accuracy: ', round(correct_cout / train_num, 3))
-        # prob_sum = np.sum(prob_mat, 1)
-        # for i in range(n_class):
-        #     prob_mat[i, 0] /= prob_sum[i]
-        #     prob_mat[i, 1] /= prob_sum[i]
-        #     prob_mat[i, 2] /= prob_sum[i]
-        # print('prob matrix:')
-        # print(prob_mat)
-        # # print(prob_mat.shape)
-
-        batch_index = 0
-        test_cout = 0
-        correct_cout = 0
-        confusion_mat = np.zeros((n_class, n_class))
-        while (True):
-            if batch_num * (batch_index + 1) > sample_num:
-                break
-
-            test_cout += 1
-            label = np.zeros(n_class)
-
-            for j in range(batch_num * batch_index, batch_num * (batch_index + 1)):
-                txs = test_xs[j]
-                txs = np.reshape(txs, [1, input_size])
-                out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
-                c = np.argmax(out_y, 1)
-                label[c] += 1
-
-            sample_index = batch_num * batch_index
-            ref_y = test_ys[sample_index]
-            ground = np.argmax(ref_y)
-            predict = np.argmax(label)
-            confusion_mat[ground, predict] += 1
-            if np.equal(np.argmax(label), np.argmax(ref_y)):
-                correct_cout += 1
-            batch_index += 1
-        print('batch test accuracy: ', round(correct_cout / test_cout, 3))
-        print(confusion_mat)
-        total_sample = np.sum(confusion_mat, 1)
-        acc_list = []
-        for i in range(0, n_class):
-            acc = confusion_mat[i, i] / total_sample[i]
-            acc_list.append(acc)
-            print('label ', i, 'acc = ', acc)
+        for key in train_dict:
+            temp_train_xs = train_dict[key]
+            cnn_result = []
+            for bxs in temp_train_xs:
+                cnn_out = sess.run(h_fc1, feed_dict={x: bxs})
+                # print(cnn_out.shape)
+                cnn_result.append(cnn_out)
+            train_dict[key] = np.array(cnn_result)
 
         # train lstm...
         print('train lstm....')
         max_acc = 0
+        # input_size = 256
         for i in range(1000):
             current_acc = 0
             step = 0
-            for bxs, bys in shufflebatch(train_xs, train_ys, 160):
-                m, acc = sess.run((lstm_optimizer, accuracy_lstm), feed_dict={x: bxs, y_: bys, keep_prob: 0.5})
+            for bxs, bys in shuffle_lstm_batch(train_dict, n_feature=256, batch_size=BATCH_SIZE):
+                m, acc = sess.run((lstm_optimizer, accuracy_lstm), feed_dict={lstm_input: bxs, y_: bys, keep_prob: 0.5})
                 current_acc += acc
                 step += 1
             current_acc = float(current_acc / step)
-            # print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
+            print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
             if current_acc > max_acc:
                 max_acc = current_acc
                 saver.save(sess, "params/cnn_net_lwy.ckpt")
@@ -425,47 +433,72 @@ def train_cnn(n_class, batch_num=20, n_total=500):
         print("training accuracy converged to : %g" % max_acc)
 
         saver.restore(sess, "params/cnn_net_lwy.ckpt")
+
         batch_index = 0
         test_cout = 0
         correct_cout = 0
         confusion_mat = np.zeros((n_class, n_class))
         while (True):
-            if batch_num * (batch_index + 1) > sample_num:
+            if BATCH_SIZE * (batch_index + 1) > sample_num:
                 break
-
             test_cout += 1
-            label = np.zeros(n_class)
-            for j in range(batch_num * batch_index, batch_num * (batch_index + 1)):
-                txs = test_xs[j]
-                txs = np.reshape(txs, [1, input_size])
-                out_y = sess.run(h, feed_dict={x: txs, keep_prob: 1.0})
-                c = np.argmax(out_y, 1)
-                label[c] += 1
-
-            sample_index = batch_num * batch_index
-            ref_y = test_ys[sample_index]
-            ground = np.argmax(ref_y)
-            predict = np.argmax(label)
-            confusion_mat[ground, predict] += 1
-            if np.equal(predict, np.argmax(ref_y)):
-                correct_cout += 1
-
+            # label = np.zeros(n_class)
+            start = batch_index * BATCH_SIZE
+            end = BATCH_SIZE * (batch_index + 1)
+            txs = test_xs[start:end]
+            txs_y = test_ys[start:end]
+            txs = np.reshape(txs, (-1, input_size))
+            out_cnn = sess.run(h_fc1, feed_dict={x: txs, keep_prob: 1.0})
+            out_cnn = np.reshape(out_cnn, (-1, 256))
+            # print(out_cnn.shape)
+            out_y = sess.run(h, feed_dict={lstm_input: out_cnn, keep_prob: 1.0})
+            predict = np.argmax(out_y, 1)
+            ground = np.argmax(txs_y, 1)
+            for i in range(BATCH_SIZE):
+                confusion_mat[ground[i], predict[i]] += 1
+                if np.equal(ground[i], predict[i]):
+                    correct_cout += 1
             batch_index += 1
 
+        print('batch test accuracy: ', round(correct_cout / batch_index, 3))
+        print(confusion_mat)
+        total_sample = np.sum(confusion_mat, 1)
+        acc_list = []
+        for i in range(0, n_class):
+            acc = confusion_mat[i, i] / total_sample[i]
+            acc_list.append(acc)
+            print('label ', i, 'acc = ', acc)
 
+        # for i in range(sample_num):
+        #     txs_batch = test_xs[i]
+        #     out_y = sess.run(h, feed_dict={x: txs_batch, keep_prob: 1.0})
+        #     predict = np.argmax(out_y, 1)
+        #     ref_y = test_ys[i]
+        #     ground = np.argmax(ref_y)
+        #     confusion_mat[ground, predict] += 1
+        #     if np.equal(predict, ground):
+        #         correct_cout += 1
+        # print('batch test accuracy: ', round(correct_cout / sample_num, 3))
+        # print(confusion_mat)
+        # total_sample = np.sum(confusion_mat, 1)
+        # acc_list = []
+        # for i in range(0, n_class):
+        #     acc = confusion_mat[i, i] / total_sample[i]
+        #     acc_list.append(acc)
+        #     print('label ', i, 'acc = ', acc)
         return np.array(acc_list)
 
 
 if __name__ == '__main__':
     batch_num = 20
     n_class = 3
-    n_round = 50
+    n_round = 5
     acc_arr = np.empty((0, 3))
     # n_total = 2000
     #
     for i in range(n_round):
         print('=================round %d=================' % i)
-        acc = train_cnn(n_class=n_class , batch_num=20 , n_total=9000)
+        acc = train_cnn(n_class=n_class , batch_num=20 , n_total=5000)
         acc_arr = np.vstack((acc_arr, acc))
 
     acc_mean = np.mean(acc_arr, 0)

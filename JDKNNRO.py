@@ -1,6 +1,8 @@
 import numpy as np
 from wk5_GMM_CNN import spectrum_crop
 from wk5_GMM_CNN import load_data
+from wk5_GMM_CNN import cepstrum_crop
+
 
 def feature_extractor_KNN(train_dict, test_dict, batch_num):
     keys = ['0', '1', '2']
@@ -14,9 +16,15 @@ def feature_extractor_KNN(train_dict, test_dict, batch_num):
         c = int(key)
         label = np.zeros(n_class)
         label[c] = 1
+
         train_xs = spectrum_crop(xs, batch_num, n_total=0)
+        # train_xs = cepstrum_crop(xs, batch_num)
+
         train_xs = np.array(train_xs)
+
         temp_test_xs = spectrum_crop(txs, batch_num, n_total=0)
+        # temp_test_xs = cepstrum_crop(txs, batch_num)
+
         train_out_dict[key] = train_xs
         temp_test_ys = np.tile(label, (len(temp_test_xs), 1))
         test_xs += temp_test_xs
@@ -26,12 +34,12 @@ def feature_extractor_KNN(train_dict, test_dict, batch_num):
 
 
 def knnro(train_xs, train_ys, n_class, txs):
-    k = 9
-    reject_rate = 4
+    k = 20
+    reject_rate = 15
     reject_label = n_class
     inner_product = np.matmul(txs, np.transpose(train_xs))
     product_index = np.argsort(-inner_product) # 降序排列
-    product_index = product_index[:k]
+    product_index = product_index[0][:k]
     nearest_label = [train_ys[i] for i in product_index]
     count_list = [nearest_label.count(j) for j in range(n_class)]
     count_arr = np.array(count_list)
@@ -49,6 +57,8 @@ def train_jdknnro(train_dict_in, test_dict, batch_num=20):
     # 取训练数据中类别数最少的数量作为训练集的size
     size_list = [train_dict[key].shape[0] for key in train_dict]
     size = min(size_list)
+    print(size)
+    size = 1000
     # 构造训练集
     feature_size =  test_xs.shape[1]
     xs = np.empty((0, feature_size))
@@ -57,7 +67,14 @@ def train_jdknnro(train_dict_in, test_dict, batch_num=20):
         c = int(key)
         temp_xs = train_dict[key]
         np.random.shuffle(temp_xs)
-        xs = np.vstack((xs, temp_xs[:size]))
+        ref_txs = temp_xs[0]
+        inner_product = np.matmul(ref_txs, np.transpose(temp_xs))
+        product_index = np.argsort(-inner_product)  # 降序排列
+        selected_xs = [temp_xs[product_index[i]] for i in range(0, temp_xs.shape[0], 10)]
+        selected_xs = np.array(selected_xs)
+        np.random.shuffle(selected_xs)
+        xs = np.vstack((xs, selected_xs[:size]))
+        # xs = np.vstack((xs, temp_xs[:size]))
         xs_y += ([c] * size)
 
     sample_num = test_xs.shape[0]
@@ -75,12 +92,14 @@ def train_jdknnro(train_dict_in, test_dict, batch_num=20):
         current_knnro = knnro_list[i-20:i]
         count_list = [current_knnro.count(j) for j in range(n_class+1)]
         count_arr = np.array(count_list)
+        valid_num = sum(count_list[:n_class])
         sorted_index = np.argsort(-count_arr)
-        ground = test_ys[i]
+        ground = np.argmax(test_ys[i])
         # predict = n_class
         if sorted_index[0] != n_class:
             predict = sorted_index[0]
-        elif sorted_index[1] == 0:
+        elif count_arr[sorted_index[1]] == 0\
+                or count_arr[sorted_index[1]]/valid_num < 0.5: # batch拒识别率
             reject_num += 1
             continue
         else:
@@ -111,12 +130,18 @@ if __name__ == '__main__':
     # n_total = 2000
     #
     dict = {'0': '', '1': '', '2': ''}
-    # dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Melon"
-    # dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Spinner"
-    # dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Tt"
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Melon"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Spinner"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Tt"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/beakedwhale"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/pilot"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/rissos"
+
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Melon"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Spinner"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Tt"
+
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/Xiamen/bottlenose"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/Xiamen/chinesewhite"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/Xiamen/Neomeris"
+
     print(dict)
     for i in range(n_round):
         print('=================round %d=================' % i)

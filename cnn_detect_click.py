@@ -83,7 +83,7 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
     wavname = wavname_ext.split('/')[-1]
     wavname = wavname.split('.')[0]
 
-    if fs > 192000:
+    if fs > tar_fs:
         print('down sample was not supported! current sampling rate is %d' % fs)
         return None
 
@@ -416,7 +416,8 @@ def cut_data(input_signal, out_len):
 
 
 def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high=20):
-    tar_fs = 192000
+    # tar_fs = 192000
+    tar_fs = 400000
     folder_list = find_click.list_files(class_path)
     if not folder_list:
         folder_list = folder_list + [class_path]
@@ -429,7 +430,7 @@ def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./CNNDet18/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./Xiamen/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
         save_npy = True
@@ -500,17 +501,40 @@ if __name__ == '__main__':
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
     #                   class_name='Spinner', snr_threshold_low=7, snr_threshold_high=20)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
-                 class_name='Tt', snr_threshold_low=18, snr_threshold_high=120)
-
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
-    #              class_name='Dc', snr_threshold_low=18, snr_threshold_high=20)
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
+    #              class_name='Tt', snr_threshold_low=18, snr_threshold_high=120)
     #
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
-    #              class_name='Dd', snr_threshold_low=18, snr_threshold_high=20)
+    # # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    # #              class_name='Dc', snr_threshold_low=18, snr_threshold_high=20)
+    # #
+    # # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    # #              class_name='Dd', snr_threshold_low=18, snr_threshold_high=20)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
+    #              class_name='Melon', snr_threshold_low=18, snr_threshold_high=120)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
+    #              class_name='Spinner', snr_threshold_low=18, snr_threshold_high=120)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
-                 class_name='Melon', snr_threshold_low=18, snr_threshold_high=120)
 
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
-                 class_name='Spinner', snr_threshold_low=18, snr_threshold_high=120)
+    # ## workshop3
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_(Mesoplodon_densirostris)',
+    #              class_name='beakedwhale', snr_threshold_low=5, snr_threshold_high=120)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_macrorhynchus)',
+    #              class_name='pilot', snr_threshold_low=5, snr_threshold_high=120)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
+    #              class_name='rissos', snr_threshold_low=5, snr_threshold_high=120)
+
+    ## xiamen
+    detect_click(
+        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/BottlenoseDolphins',
+        class_name='bottlenose', snr_threshold_low=12, snr_threshold_high=120)
+
+    detect_click(
+        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/ChineseWhiteDolphins',
+        class_name='chinesewhite', snr_threshold_low=12, snr_threshold_high=120)
+
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/NeomerisPhocaenoides',
+                 class_name='Neomeris', snr_threshold_low=12, snr_threshold_high=120)

@@ -7,11 +7,15 @@ if __name__ == '__main__':
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Melon"
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Spinner"
     # dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete/Tt"
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet18/Melon"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet18/Spinner"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet18/Tt"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet18/Melon"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet18/Spinner"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet18/Tt"
 
-    root_save_path = "/home/fish/ROBB/CNN_click/click/CNNDet18_filtered"
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/Xiamen/bottlenose"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/Xiamen/chinesewhite"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/Xiamen/Neomeris"
+
+    root_save_path = "/home/fish/ROBB/CNN_click/click/Xiamen_filtered"
     if not os.path.exists(root_save_path):
        os.makedirs(root_save_path)
 
