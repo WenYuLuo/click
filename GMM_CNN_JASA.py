@@ -516,6 +516,7 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
     correct_prediction_lstm = tf.equal(tf.argmax(output, 1), tf.argmax(y_, 1))
     accuracy_lstm = tf.reduce_mean(tf.cast(correct_prediction_lstm, "float"))
 
+
     init = tf.global_variables_initializer()
 
     saver = tf.train.Saver()
