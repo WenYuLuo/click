@@ -28,7 +28,7 @@ def load_data(dict):
 
     for key in dict:
         path = dict[key]
-        # print(path)
+        print(path)
         c = int(key)
 
         ### split by date
@@ -81,27 +81,27 @@ def load_data(dict):
         # training set
         xs = np.empty((0, 320))
         count = 0
-        print('training set loading.......')
+        # print('training set loading.......')
         for npy in train_set:
             npy_data = np.load(npy)
             if npy_data.shape[0] == 0:
                 continue
             xs = np.vstack((xs, npy_data))
             count += npy_data.shape[0]
-        print('loaded clicks:', count)
+        print('training loaded clicks:', count)
 
         # testing set
         txs = np.empty((0, 320))
         count = 0
-        print('testing set loading.......')
+        # print('testing set loading.......')
         for npy in test_set:
-            print(npy)
+            # print(npy)
             npy_data = np.load(npy)
             if npy_data.shape[0] == 0:
                 continue
             txs = np.vstack((txs, npy_data))
             count += npy_data.shape[0]
-        print('loaded clicks:', count)
+        print('testing loaded clicks:', count)
 
         train_dict[key] = xs
         test_dict[key] = txs
@@ -222,24 +222,24 @@ def train_gmm(train_dict_in, test_dict, batch_list=[]):
                 prob.append(temp_prob)
             prob = np.array(prob)
             prob = np.sum(prob, 1)
-            prob_arr = np.hstack((prob_arr, prob))
+            prob_arr = np.hstack((prob_arr, np.reshape(prob, (n_class, 1))))
             batch_index += 1
 
         # 遍历gmm结果，按不同的batch整合预测
         for i in range(prob_arr.shape[1]):
             for j in batch_list:
                 if (i+1) % j == 0:      # 判断是否为batch的整数倍。
-                    prob = np.sum(prob_arr[(i+1-j):(i+1)], 1)
+                    prob = np.sum(prob_arr[:, (i+1-j):(i+1)], 1)
                     predict = np.argmax(prob)
                     confusion_mat_dict[j][ground, predict] += 1
 
     for batch_id in batch_list:
         confusion_mat = confusion_mat_dict[batch_id]
-        print('batch id %d :' % batch_id*10)
+        print('batch id %d :' % (batch_id*10))
         total_sample = np.sum(confusion_mat, 1)
         for i in range(0, n_class):
             confusion_mat[i, :] /= total_sample[i]
-        print(confusion_mat)
+        print(np.round(confusion_mat, 3))
         confusion_mat_dict[batch_id] = confusion_mat
     return confusion_mat_dict
 
@@ -335,9 +335,11 @@ def feature_extractor_CNN(train_dict, test_dict, batch_num):
     n_class = len(train_dict)
 
     train_size_list = [train_dict[key].shape[0] for key in train_dict]
-    train_size = max(train_size_list)*10
+    train_size = max(train_size_list)
 
     train_total_batch = int(train_size / batch_num)
+
+    # print(train_total_batch)
 
     train_out_dict = {}
     test_out_dict = {}
@@ -416,11 +418,10 @@ def shuffle_lstm_batch(train_dict, n_feature, n_class, batch_size):
 
 def train_cnn(train_dict, test_dict, batch_list=[]):
 
-    train_out_dict, test_out_dict = feature_extractor_CNN(train_dict, test_dict, batch_num=max(batch_list))
+    train_out_dict, test_out_dict = feature_extractor_CNN(train_dict, test_dict, batch_num=10*max(batch_list))
 
     n_class = len(train_out_dict)
-    # print(train_xs.shape)
-    # print(test_xs.shape)
+
     input_size = 96
     tf.reset_default_graph()
     x = tf.placeholder("float", [None, input_size])
@@ -486,32 +487,32 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
-    # lstm
-    joint_train = tf.placeholder(dtype=bool, name='joint_train')
-    lstm_place_input = tf.placeholder("float", [None, feature_out])
-
-    def reshape_for_lstm(input):
-        out_put = tf.reshape(input, [-1, batch_num, feature_out])
-        return out_put
-
-    lstm_input = tf.cond(joint_train, lambda: reshape_for_lstm(h_fc5), lambda: reshape_for_lstm(lstm_place_input))
-
-    lstm_cell = tf.nn.rnn_cell.LSTMCell(num_units=128, use_peepholes=True,
-                                        initializer=initializers.xavier_initializer(),
-                                        num_proj=n_class)
-    BATCH_SIZE = 100
-    init_state = lstm_cell.zero_state(batch_size=BATCH_SIZE, dtype=tf.float32)
-    outputs, states = tf.nn.dynamic_rnn(cell=lstm_cell, inputs=lstm_input, initial_state=init_state,
-                                        dtype=tf.float32)
-    h = outputs[:, -1, :]
-    output = tf.nn.softmax(h)
-    # W = weight_variable([num_units, D_label])
-    # b = bias_variable([D_label])
-    # output = tf.nn.softmax(tf.matmul(rnn, W) + b)
-    cross_entropy_lstm = -tf.reduce_sum(y_ * tf.log(output))
-    lstm_optimizer = tf.train.AdamOptimizer(7e-5).minimize(loss=cross_entropy_lstm)
-    correct_prediction_lstm = tf.equal(tf.argmax(output, 1), tf.argmax(y_, 1))
-    accuracy_lstm = tf.reduce_mean(tf.cast(correct_prediction_lstm, "float"))
+    # # lstm
+    # joint_train = tf.placeholder(dtype=bool, name='joint_train')
+    # lstm_place_input = tf.placeholder("float", [None, feature_out])
+    #
+    # def reshape_for_lstm(input):
+    #     out_put = tf.reshape(input, [-1, batch_num, feature_out])
+    #     return out_put
+    #
+    # lstm_input = tf.cond(joint_train, lambda: reshape_for_lstm(h_fc5), lambda: reshape_for_lstm(lstm_place_input))
+    #
+    # lstm_cell = tf.nn.rnn_cell.LSTMCell(num_units=128, use_peepholes=True,
+    #                                     initializer=initializers.xavier_initializer(),
+    #                                     num_proj=n_class)
+    # BATCH_SIZE = 100
+    # init_state = lstm_cell.zero_state(batch_size=BATCH_SIZE, dtype=tf.float32)
+    # outputs, states = tf.nn.dynamic_rnn(cell=lstm_cell, inputs=lstm_input, initial_state=init_state,
+    #                                     dtype=tf.float32)
+    # h = outputs[:, -1, :]
+    # output = tf.nn.softmax(h)
+    # # W = weight_variable([num_units, D_label])
+    # # b = bias_variable([D_label])
+    # # output = tf.nn.softmax(tf.matmul(rnn, W) + b)
+    # cross_entropy_lstm = -tf.reduce_sum(y_ * tf.log(output))
+    # lstm_optimizer = tf.train.AdamOptimizer(7e-5).minimize(loss=cross_entropy_lstm)
+    # correct_prediction_lstm = tf.equal(tf.argmax(output, 1), tf.argmax(y_, 1))
+    # accuracy_lstm = tf.reduce_mean(tf.cast(correct_prediction_lstm, "float"))
 
     init = tf.global_variables_initializer()
 
@@ -528,7 +529,7 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
                 current_acc += acc
                 step += 1
             current_acc = float(current_acc/step)
-            print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
+            # print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
             if current_acc > max_acc:
                 max_acc = current_acc
                 saver.save(sess, "params/cnn_net_lwy.ckpt")
@@ -539,8 +540,6 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
         print("training accuracy converged to : %g" % max_acc)
         saver.restore(sess, "params/cnn_net_lwy.ckpt")
 
-        correct_cout_softmax = 0
-        correct_cout_mv = 0
 
         # 混淆矩阵初始化
         confusion_mat_mv_dict = {}
@@ -552,10 +551,10 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
         min_batch = min(batch_list)*10
         for key in test_out_dict:
             test_data = test_out_dict[key]
-            ground = key
-            min_batch_num = test_data.shape[0]/min_batch
+            ground = int(key)
+            min_batch_num = int(test_data.shape[0]/min_batch)
             soft_out_arr = np.empty((0, n_class))
-            label_mv_arr = np.empty(n_class)
+            label_mv_arr = np.empty((0, n_class))
             for i in range(min_batch_num-1):
                 txs = test_data[(i*min_batch):((i+1)*min_batch)]
                 out_y = sess.run(y, feed_dict={x: txs, keep_prob: 1.0})
@@ -563,12 +562,12 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
 
                 # soft max 计算
                 label_softmax = np.sum(out_y, 0)
-                soft_out_arr = np.vstack((soft_out_arr, out_y))
+                soft_out_arr = np.vstack((soft_out_arr, label_softmax))
 
                 # majority voting 计算
-                label_mv = np.zeros(n_class)
+                label_mv = np.zeros((1, n_class))
                 for i in mv_out:
-                    label_mv[i] += 1
+                    label_mv[0, i] += 1
                 label_mv_arr = np.vstack((label_mv_arr, label_mv))
 
             for i in range(soft_out_arr.shape[0]):
@@ -582,21 +581,21 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
         print('majority voting result:')
         for batch_id in batch_list:
             confusion_mat = confusion_mat_mv_dict[batch_id]
-            print('batch id %d :' % batch_id * 10)
+            print('batch id %d :' % (batch_id * 10))
             total_sample = np.sum(confusion_mat, 1)
             for i in range(0, n_class):
                 confusion_mat[i, :] /= total_sample[i]
-            print(confusion_mat)
+            print(np.round(confusion_mat, 3))
             confusion_mat_mv_dict[batch_id] = confusion_mat
 
-        print('softmax sum result:')
+        print('\nsoftmax sum result:')
         for batch_id in batch_list:
             confusion_mat = confusion_mat_softmax_dict[batch_id]
-            print('batch id %d :' % batch_id * 10)
+            print('batch id %d :' % (batch_id * 10))
             total_sample = np.sum(confusion_mat, 1)
             for i in range(0, n_class):
                 confusion_mat[i, :] /= total_sample[i]
-            print(confusion_mat)
+            print(np.round(confusion_mat, 3))
             confusion_mat_softmax_dict[batch_id] = confusion_mat
 
        # # train lstm...
@@ -681,8 +680,8 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
 
 if __name__ == '__main__':
     # batch_num = 20
-    n_round = 15
-    n_class = 3
+    n_round = 30
+    n_class = 2
     batch_list = [1, 2, 3, 4, 5] # 表示batch分别为10 20 30 40 50
     confusion_gmm_dict = {}
     confusion_cnnmv_dict = {}
@@ -704,18 +703,22 @@ if __name__ == '__main__':
     # dict["2"] = "/home/fish/ROBB/CNN_click/click/Xiamen/Neomeris"
     #
 
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Melon"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Spinner"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Tt"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Melon"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Spinner"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Tt"
 
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Melon"
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Spinner"
     # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Tt"
-
+    #
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/beakedwhale"
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/pilot"
     # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/rissos"
-    print(dict)
+
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/beakedwhale"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/pilot"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/rissos"
+    # print(dict)
     for i in range(n_round):
         print('=================round %d=================' % i)
         train_dict, test_dict = load_data(dict)
@@ -731,29 +734,31 @@ if __name__ == '__main__':
             # confusion_cnnlstm_dict[batch_id] += np.zeros((n_class, n_class))
 
     for batch_id in batch_list:
-        print('batch_num:', batch_id*10)
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++')
+        print('batch_num =', batch_id*10)
         mat_gmm = np.array(confusion_gmm_dict[batch_id])
         mat_mv = np.array(confusion_cnnmv_dict[batch_id])
         mat_soft = np.array(confusion_cnnsoft_dict[batch_id])
 
-        mean_gmm = np.mean(mat_gmm, 2)
-        std_gmm = np.mean(mat_gmm, 2)
+        mean_gmm = np.mean(mat_gmm, 0)
+        std_gmm = np.std(mat_gmm, 0)
         print('gmm:')
         print('gmm mean:')
         print(mean_gmm)
         print('gmm std:')
         print(std_gmm)
-
-        mean_mv = np.mean(mat_mv, 2)
-        std_mv = np.mean(mat_mv, 2)
+        print(' ')
+        mean_mv = np.mean(mat_mv, 0)
+        std_mv = np.std(mat_mv, 0)
         print('majority voting:')
         print('majority voting mean:')
         print(mean_mv)
         print('majority voting std:')
         print(std_mv)
+        print(' ')
 
-        mean_softmax = np.mean(mat_soft, 2)
-        std_softmax = np.mean(mat_soft, 2)
+        mean_softmax = np.mean(mat_soft, 0)
+        std_softmax = np.std(mat_soft, 0)
         print('softmax:')
         print('softmax mean:')
         print(mean_softmax)
