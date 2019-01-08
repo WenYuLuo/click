@@ -399,6 +399,8 @@ def shuffle_lstm_batch(train_dict, n_feature, n_class, lstm_step, batch_size):
         temp_train = train_dict[key]
         if temp_train is None:
             continue
+        batch_valid_num = int(temp_train.shape[0]/lstm_step)
+        temp_train = temp_train[:batch_valid_num*lstm_step]
         temp_train = np.reshape(temp_train, (-1, lstm_step, n_feature))
         xs += temp_train.tolist()
         temp_train_ys = np.tile(label, (temp_train.shape[0], 1))
@@ -491,18 +493,20 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
     # lstm
     joint_train = tf.placeholder(dtype=bool, name='joint_train')
     lstm_place_input = tf.placeholder("float", [None, feature_out])
-    lstm_time_step = tf.placeholder("int", name='lstm_time_step')
+    # lstm_time_step = tf.placeholder("int16", name='lstm_time_step')
 
-    def reshape_for_lstm(input, batch_num):
-        out_put = tf.reshape(input, [-1, batch_num, feature_out])
+    BATCH_SIZE = 10
+
+    def reshape_for_lstm(input):
+        out_put = tf.reshape(input, [BATCH_SIZE, -1, feature_out])
         return out_put
 
-    lstm_input = tf.cond(joint_train, lambda: reshape_for_lstm(h_fc5, lstm_time_step), lambda: reshape_for_lstm(lstm_place_input, lstm_time_step))
+    lstm_input = tf.cond(joint_train, lambda: reshape_for_lstm(h_fc5), lambda: reshape_for_lstm(lstm_place_input))
 
     lstm_cell = tf.nn.rnn_cell.LSTMCell(num_units=128, use_peepholes=True,
                                         initializer=initializers.xavier_initializer(),
                                         num_proj=n_class)
-    BATCH_SIZE = tf.placeholder("int", name='lstm_batch_size')
+    # BATCH_SIZE = tf.placeholder("int16", name='lstm_batch_size')
     init_state = lstm_cell.zero_state(batch_size=BATCH_SIZE, dtype=tf.float32)
     outputs, states = tf.nn.dynamic_rnn(cell=lstm_cell, inputs=lstm_input, initial_state=init_state,
                                         dtype=tf.float32)
@@ -610,6 +614,7 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
                 continue
             cnn_result = []
             for bxs in temp_train_xs:
+                bxs = np.reshape(bxs, (-1, input_size))
                 cnn_out = sess.run(h_fc5, feed_dict={x: bxs, keep_prob: 1})
                 # print(cnn_out.shape)
                 cnn_result.append(cnn_out)
@@ -621,7 +626,7 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
             sess_path = "params/cnn_net_lwy_%s.ckpt" % str(lstm_step)
             print('train batch=%d lstm....' % lstm_step)
             max_acc = 0
-            train_batch_size = 100
+            train_batch_size = BATCH_SIZE
             for i in range(1000):
                 current_acc = 0
                 step = 0
@@ -631,17 +636,15 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
                                                                                   lstm_place_input: bxs,
                                                                                   y_: bys,
                                                                                   keep_prob: 1.0,
-                                                                                  joint_train: False,
-                                                                                  lstm_time_step: lstm_step,
-                                                                                  BATCH_SIZE: train_batch_size})
+                                                                                  joint_train: False})
                     current_acc += acc
                     step += 1
                 current_acc = float(current_acc / step)
-                print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
+                # print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
                 if current_acc > max_acc:
                     max_acc = current_acc
                     saver.save(sess, sess_path)
-                    if max_acc > 0.97:
+                    if max_acc > 0.95:
                         break
                 if max_acc - current_acc > 0.05:
                     break
@@ -652,21 +655,23 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
             for key in test_out_dict:
                 test_data = test_out_dict[key]
                 ground = int(key)
-                sample_num = int(test_data.shape[0]/lstm_step)
+                batch_valid_num = int(test_data.shape[0] / lstm_step)
+                test_data = test_data[:batch_valid_num * lstm_step]
+                test_data = np.reshape(test_data, (-1, lstm_step, input_size))
+                sample_num = int(test_data.shape[0]/BATCH_SIZE)
                 for i in range(sample_num-1):
-                    txs = test_data[(i * lstm_step):((i + 1) * lstm_step)]
+                    txs = test_data[(i * BATCH_SIZE):((i + 1) * BATCH_SIZE)]
                     txs = np.reshape(txs, (-1, input_size))
                     out_cnn = sess.run(h_fc5, feed_dict={x: txs, keep_prob: 1.0})
                     out_cnn = np.reshape(out_cnn, (-1, feature_out))
                     # print(out_cnn.shape)
-                    out_y = sess.run(h, feed_dict={x: np.zeros((10, input_size)),
+                    out_y = sess.run(output, feed_dict={x: np.zeros((10, input_size)),
                                                    lstm_place_input: out_cnn,
                                                    keep_prob: 1.0,
-                                                   joint_train: False,
-                                                   lstm_time_step: lstm_step,
-                                                   BATCH_SIZE: 1})
+                                                   joint_train: False})
                     predict = np.argmax(out_y, 1)
-                    confusion_mat_lstm_dict[batch_id][ground, predict] += 1
+                    for i in range(predict.shape[0]):
+                        confusion_mat_lstm_dict[batch_id][ground, predict[i]] += 1
 
         print('\nlstm result:')
         for batch_id in batch_list:
@@ -678,23 +683,23 @@ def train_cnn(train_dict, test_dict, batch_list=[]):
             print(np.round(confusion_mat, 3))
             confusion_mat_lstm_dict[batch_id] = confusion_mat
 
-        return confusion_mat_mv_dict, confusion_mat_softmax_dict
+        return confusion_mat_mv_dict, confusion_mat_softmax_dict, confusion_mat_lstm_dict
 
 
 if __name__ == '__main__':
     # batch_num = 20
-    n_round = 30
-    n_class = 2
+    n_round = 50
+    # n_class = 2
     batch_list = [1, 2, 3, 4, 5] # 表示batch分别为10 20 30 40 50
     confusion_gmm_dict = {}
     confusion_cnnmv_dict = {}
     confusion_cnnsoft_dict = {}
-    # confusion_cnnlstm_dict = {}
+    confusion_cnnlstm_dict = {}
     for batch_id in batch_list:
         confusion_gmm_dict[batch_id] = []
         confusion_cnnmv_dict[batch_id] = []
         confusion_cnnsoft_dict[batch_id] = []
-        # confusion_cnnlstm_dict[batch_id] = np.zeros((n_class, n_class))
+        confusion_cnnlstm_dict[batch_id] = []
 
     # dict = {'0': '', '1': ''}
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/Xiamen_filtered/chinesewhite"
@@ -710,17 +715,17 @@ if __name__ == '__main__':
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Spinner"
     # dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk5_complete_filtered/Tt"
 
-    # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Melon"
-    # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Spinner"
-    # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Tt"
+    dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Melon"
+    dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Spinner"
+    dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet12_filtered/Tt"
     #
     # dict["0"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/beakedwhale"
     # dict["1"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/pilot"
     # dict["2"] = "/home/fish/ROBB/CNN_click/click/CNNDet_wk3/rissos"
 
-    dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/beakedwhale"
-    dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/pilot"
-    dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/rissos"
+    # dict["0"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/beakedwhale"
+    # dict["1"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/pilot"
+    # dict["2"] = "/home/fish/ROBB/CNN_click/click/TKEO_wk3_complete/rissos"
     # print(dict)
     for i in range(n_round):
         print('=================round %d=================' % i)
@@ -728,13 +733,13 @@ if __name__ == '__main__':
         print('=========================GMM %d===========================' % i)
         confusion_gmm = train_gmm(train_dict, test_dict, batch_list=batch_list)
         print('=========================CNN %d===========================' % i)
-        confusion_mv, confusion_softmax = train_cnn(train_dict, test_dict, batch_list=batch_list)
+        confusion_mv, confusion_softmax, confusion_lstm = train_cnn(train_dict, test_dict, batch_list=batch_list)
 
         for batch_id in batch_list:
             confusion_gmm_dict[batch_id].append(confusion_gmm[batch_id])
             confusion_cnnmv_dict[batch_id].append(confusion_mv[batch_id])
             confusion_cnnsoft_dict[batch_id].append(confusion_softmax[batch_id])
-            # confusion_cnnlstm_dict[batch_id] += np.zeros((n_class, n_class))
+            confusion_cnnlstm_dict[batch_id].append(confusion_lstm[batch_id])
 
     for batch_id in batch_list:
         print('++++++++++++++++++++++++++++++++++++++++++++++++++')
@@ -742,30 +747,39 @@ if __name__ == '__main__':
         mat_gmm = np.array(confusion_gmm_dict[batch_id])
         mat_mv = np.array(confusion_cnnmv_dict[batch_id])
         mat_soft = np.array(confusion_cnnsoft_dict[batch_id])
+        mat_lstm = np.array(confusion_cnnlstm_dict[batch_id])
 
         mean_gmm = np.mean(mat_gmm, 0)
         std_gmm = np.std(mat_gmm, 0)
         print('gmm:')
         print('gmm mean:')
-        print(mean_gmm)
+        print(np.round(mean_gmm, 4))
         print('gmm std:')
-        print(std_gmm)
+        print(np.round(std_gmm, 4))
         print(' ')
         mean_mv = np.mean(mat_mv, 0)
         std_mv = np.std(mat_mv, 0)
         print('majority voting:')
         print('majority voting mean:')
-        print(mean_mv)
+        print(np.round(mean_mv, 4))
         print('majority voting std:')
-        print(std_mv)
+        print(np.round(std_mv, 4))
         print(' ')
 
         mean_softmax = np.mean(mat_soft, 0)
         std_softmax = np.std(mat_soft, 0)
         print('softmax:')
         print('softmax mean:')
-        print(mean_softmax)
+        print(np.round(mean_softmax, 4))
         print('softmax std:')
-        print(std_softmax)
+        print(np.round(std_softmax, 4))
+
+        mean_lstm = np.mean(mat_lstm, 0)
+        std_lstm = np.std(mat_lstm, 0)
+        print('lstm:')
+        print('lstm mean:')
+        print(np.round(mean_lstm, 4))
+        print('lstm std:')
+        print(np.round(std_lstm, 4))
 
 

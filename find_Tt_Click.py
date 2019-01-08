@@ -34,7 +34,7 @@ def shuffle_frames(data):
 
 
 def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high=100):
-    tar_fs = 192000
+    tar_fs = 96000
     signal_len = 320
     folder_list = find_click.list_files(class_path)
     if folder_list == []:
@@ -48,7 +48,7 @@ def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./TKEO_wk5_complete/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./TKEO_wk3_complete/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
 
@@ -192,18 +192,28 @@ if __name__ == '__main__':
     # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
     #                   class_name='Spinner', snr_threshold_low=5, snr_threshold_high=20)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
-                      class_name='Tt', snr_threshold_low=5)
-
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
-    #                   class_name='Dc', snr_threshold_low=5)
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
+    #                   class_name='Tt', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
-    #                   class_name='Dd', snr_threshold_low=5)
+    # # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    # #                   class_name='Dc', snr_threshold_low=5)
+    # #
+    # # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    # #                   class_name='Dd', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
+    #                   class_name='Melon', snr_threshold_low=5)
+    #
+    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
+    #                   class_name='Spinner', snr_threshold_low=5)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
-                      class_name='Melon', snr_threshold_low=5)
+    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
+                      class_name='rissos', snr_threshold_low=5)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
-                      class_name='Spinner', snr_threshold_low=5)
+    detect_save_click(
+        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_macrorhynchus)',
+        class_name='pilot', snr_threshold_low=5)
 
+    detect_save_click(
+        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_(Mesoplodon_densirostris)',
+        class_name='beakedwhale', snr_threshold_low=5)
