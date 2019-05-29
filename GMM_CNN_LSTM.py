@@ -655,7 +655,7 @@ def train_cnn(train_dict, test_dict, batch_num=20, n_total=500):
                                                                               joint_train: False})
                 current_acc += acc
                 step += 1
-            current_acc = float(current_acc / step)git
+            current_acc = float(current_acc / step)
             print("epoch : %d, training accuracy : %g" % (i + 1, current_acc))
             if current_acc > max_acc:
                 max_acc = current_acc

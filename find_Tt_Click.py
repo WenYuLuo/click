@@ -123,97 +123,97 @@ def detect_save_click(class_path, class_name, snr_threshold_low=5, snr_threshold
 
 
 if __name__ == '__main__':
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_'
+    # detect_save_click(class_path='/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_'
     #                              '(Mesoplodon_densirostris)', class_name='BBW')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/bottlenose',
     #                   class_name='Tt')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_'
+    # detect_save_click(class_path='/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_'
     #                              'macrorhynchus)', class_name='Gm')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
+    # detect_save_click(class_path='/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
     #                   class_name='Gg')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/Dc',
     #                   class_name='Dc')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/Dd',
     #                   class_name='Dd')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/melon',
     #                   class_name='Melon')
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/spinner',
     #                   class_name='Spinner')
 
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Northern right whale dolphin, Lissodelphis borealis',
+    # detect_save_click(class_path='/Northern right whale dolphin, Lissodelphis borealis',
     #                   class_name='RightWhale', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
+    # detect_save_click(class_path='/Pacific white-sided dolphin, Lagenorhynchus obliquidens',
     #                   class_name='PacWhite', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Pilot whale, Globicephala macrorhynchus',
+    # detect_save_click(class_path='/Pilot whale, Globicephala macrorhynchus',
     #                   class_name='Gm', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Rissos dolphin, Grampus griseus',
+    # detect_save_click(class_path='/Rissos dolphin, Grampus griseus',
     #                   class_name='Gg', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Rough-toothed dolphin, Steno bredanensis',
+    # detect_save_click(class_path='/Rough-toothed dolphin, Steno bredanensis',
     #                   class_name='RoughToothed', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Sperm whale, Physeter macrocephalus',
+    # detect_save_click(class_path='/Sperm whale, Physeter macrocephalus',
     #                   class_name='Sperm', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Striped dolphin, Stenella coeruleoalba',
+    # detect_save_click(class_path='/Striped dolphin, Stenella coeruleoalba',
     #                   class_name='Striped', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Blainville Beaked Whale, Mesoplodon densirostris',
+    # detect_save_click(class_path='/Blainville Beaked Whale, Mesoplodon densirostris',
     #                   class_name='Mesoplodon', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Cuvier Beaked Whale, Ziphius cavirostris',
+    # detect_save_click(class_path='/Cuvier Beaked Whale, Ziphius cavirostris',
     #                   class_name='Beaked', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/Melon-headed whale, Pepenocephala electra',
+    # detect_save_click(class_path='/Melon-headed whale, Pepenocephala electra',
     #                   class_name='Melon', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/bottlenose',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/bottlenose',
     #                   class_name='Tt', snr_threshold_low=5, snr_threshold_high=20)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/Dc',
     #                   class_name='Dc', snr_threshold_low=5, snr_threshold_high=20)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/Dd',
     #                   class_name='Dd', snr_threshold_low=5, snr_threshold_high=20)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/melon',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/melon',
     #                   class_name='Melon', snr_threshold_low=5, snr_threshold_high=20)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
+    # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/spinner',
     #                   class_name='Spinner', snr_threshold_low=5, snr_threshold_high=20)
 
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
+    # detect_save_click(class_path='/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
     #                   class_name='Tt', snr_threshold_low=5)
     #
-    # # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    # # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/Dc',
     # #                   class_name='Dc', snr_threshold_low=5)
     # #
-    # # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    # # detect_save_click(class_path='/ForCNNLSTM/workshop5_filter/Dd',
     # #                   class_name='Dd', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
+    # detect_save_click(class_path='/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
     #                   class_name='Melon', snr_threshold_low=5)
     #
-    # detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
+    # detect_save_click(class_path='/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
     #                   class_name='Spinner', snr_threshold_low=5)
 
-    detect_save_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
+    detect_save_click(class_path='/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
                       class_name='rissos', snr_threshold_low=5)
 
     detect_save_click(
-        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_macrorhynchus)',
+        class_path='/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_macrorhynchus)',
         class_name='pilot', snr_threshold_low=5)
 
     detect_save_click(
-        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_(Mesoplodon_densirostris)',
+        class_path='/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_(Mesoplodon_densirostris)',
         class_name='beakedwhale', snr_threshold_low=5)

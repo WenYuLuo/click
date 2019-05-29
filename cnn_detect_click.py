@@ -94,7 +94,8 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
     time_len = len_audio/fs
     print('current audio length:', time_len)
 
-    fl = fs/40
+    fl = 5000
+    # fl = fs / 40
     # fs = 192000
     wn = 2*fl/fs
     b, a = signal.butter(8, wn, 'high')
@@ -312,8 +313,21 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
     # pl.show()
 
     if save_npy:
+
+        dst = "%(path)s/%(pre)s" \
+              % {'path': dst_path, 'pre': wavname}
+        if not os.path.exists(dst):
+            mkdir(dst)
+        print(dst)
+
+        pre_time_stamp = 0
+        start_time = 0
+        tmp_clicktrain = np.empty((0, signal_len))
+        train_num = 0
+        # is_train_start = True
         for pos_tuple in update_detected_list:
             temp_click = audio_filted[pos_tuple[0]:pos_tuple[1]]
+            current_time_stamp = (pos_tuple[0]+pos_tuple[1]) / (2 * fs)
 
             # temp_click = resample(temp_click, fs, tar_fs)
 
@@ -332,14 +346,61 @@ def run_cnn_detection(file_name, snr_threshold_low=5, snr_threshold_high=20, sav
             click_data = cut_data(click_data, signal_len)
 
             click_data = click_data.astype(np.short)
+
+            beg_idx = np.random.randint(64, (64 + 32))
+            crop_x = click_data[beg_idx:(beg_idx + 192)]
+            crop_x = np.reshape(crop_x, [1, 192])
+
+            crop_x = np.fft.fft(crop_x)
+            crop_x = np.sqrt(crop_x.real ** 2 + crop_x.imag ** 2)
+
+            crop_x = crop_x[0, :96]
+            crop_x = np.reshape(crop_x, [1, 96])
+            # peak值位于20k以下，75k以上的滤去
+            peak_index = np.argmax(crop_x)
+            if peak_index < 20 or peak_index > 75:
+                continue
+
+            # if is_train_start:
+            #     start_time = current_time_stamp
+            #     pre_time_stamp = current_time_stamp
+            #     tmp_clicktrain = np.empty((0, signal_len))
+            #     tmp_clicktrain = np.vstack((tmp_clicktrain, click_data))
+            #     is_train_start = False
+            #     continue
+
+            train_duration = current_time_stamp - start_time
+            train_interval = current_time_stamp - pre_time_stamp
+            if train_duration > 2.0 or train_interval > 1.0:
+                if tmp_clicktrain.shape[0] != 0:
+                    # click_arr.append(tmp_clicktrain)
+                    train_num += 1
+                    npy_path = "%(path)s/%(pre)s_N%(num)d.npy" \
+                          % {'path': dst, 'pre': wavname, 'num': train_num}
+                    np.save(npy_path, np.array(tmp_clicktrain, dtype=np.short))
+
+                tmp_clicktrain = click_data
+                start_time = current_time_stamp
+                pre_time_stamp = current_time_stamp
+            else:
+                tmp_clicktrain = np.vstack((tmp_clicktrain, click_data))
+                pre_time_stamp = current_time_stamp
             # print(click_data.shape)
-            click_arr.append(click_data)
+            # click_arr.append(click_data)
             count += 1
 
-        dst = "%(path)s/%(pre)s_N%(num)d.npy" \
-              % {'path': dst_path, 'pre': wavname, 'num': len(click_arr)}
-        print(dst)
-        np.save(dst, np.array(click_arr, dtype=np.short))
+        if tmp_clicktrain.shape[0] != 0:
+            train_num += 1
+            npy_path = "%(path)s/%(pre)s_N%(num)d.npy" \
+                       % {'path': dst, 'pre': wavname, 'num': train_num}
+            np.save(npy_path, np.array(tmp_clicktrain, dtype=np.short))
+        print('click train num:', train_num)
+
+        # dst = "%(path)s/%(pre)s_N%(num)d.npy" \
+        #       % {'path': dst_path, 'pre': wavname, 'num': count}
+        # print(dst)
+        # np.save(dst, np.array(click_arr, dtype=np.short))
+
         print("count = %(count)d" % {'count': count})
 
     return update_detected_list, fs, audio, audio_filted, detected_visual
@@ -415,9 +476,9 @@ def cut_data(input_signal, out_len):
     return input_signal[beg_idx:end_idx]
 
 
-def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high=20):
+def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high=20, tar_fs=192000):
     # tar_fs = 192000
-    tar_fs = 400000
+    # tar_fs = 400000
     folder_list = find_click.list_files(class_path)
     if not folder_list:
         folder_list = folder_list + [class_path]
@@ -430,7 +491,7 @@ def detect_click(class_path, class_name, snr_threshold_low=5, snr_threshold_high
 
         path_name = folder.split('/')[-1]
 
-        dst_path = "./Xiamen/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
+        dst_path = "./CNN_Det12_WK5/%(class)s/%(type)s" % {'class': class_name, 'type': path_name}
         if not os.path.exists(dst_path):
             mkdir(dst_path)
         save_npy = True
@@ -501,40 +562,40 @@ if __name__ == '__main__':
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/spinner',
     #                   class_name='Spinner', snr_threshold_low=7, snr_threshold_high=20)
 
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
-    #              class_name='Tt', snr_threshold_low=18, snr_threshold_high=120)
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_bottlenose/palmyra2006',
+                 class_name='Tt', snr_threshold_low=12, snr_threshold_high=120, tar_fs=192000)
+
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
+    #              class_name='Dc', snr_threshold_low=18, snr_threshold_high=20)
     #
-    # # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dc',
-    # #              class_name='Dc', snr_threshold_low=18, snr_threshold_high=20)
-    # #
-    # # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
-    # #              class_name='Dd', snr_threshold_low=18, snr_threshold_high=20)
-    #
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
-    #              class_name='Melon', snr_threshold_low=18, snr_threshold_high=120)
-    #
-    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
-    #              class_name='Spinner', snr_threshold_low=18, snr_threshold_high=120)
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/workshop5_filter/Dd',
+    #              class_name='Dd', snr_threshold_low=18, snr_threshold_high=20)
+
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_melon-headed/palmyra2006',
+                 class_name='Melon', snr_threshold_low=12, snr_threshold_high=120, tar_fs=192000)
+
+    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/5th_DCL_data_spinner/palmyra2006',
+                 class_name='Spinner', snr_threshold_low=12, snr_threshold_high=120, tar_fs=192000)
 
 
     # ## workshop3
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Blainvilles_beaked_whale_(Mesoplodon_densirostris)',
-    #              class_name='beakedwhale', snr_threshold_low=5, snr_threshold_high=120)
+    #              class_name='beakedwhale', snr_threshold_low=12, snr_threshold_high=120, tar_fs=96000)
     #
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Pilot_whale_(Globicephala_macrorhynchus)',
-    #              class_name='pilot', snr_threshold_low=5, snr_threshold_high=120)
+    #              class_name='pilot', snr_threshold_low=12, snr_threshold_high=120, tar_fs=96000)
     #
     # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/3rdTraining_Data/Rissos_(Grampus_grisieus)',
-    #              class_name='rissos', snr_threshold_low=5, snr_threshold_high=120)
+    #              class_name='rissos', snr_threshold_low=12, snr_threshold_high=120, tar_fs=96000)
 
-    ## xiamen
-    detect_click(
-        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/BottlenoseDolphins',
-        class_name='bottlenose', snr_threshold_low=12, snr_threshold_high=120)
-
-    detect_click(
-        class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/ChineseWhiteDolphins',
-        class_name='chinesewhite', snr_threshold_low=12, snr_threshold_high=120)
-
-    detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/NeomerisPhocaenoides',
-                 class_name='Neomeris', snr_threshold_low=12, snr_threshold_high=120)
+    # ## xiamen
+    # detect_click(
+    #     class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/BottlenoseDolphins',
+    #     class_name='bottlenose', snr_threshold_low=12, snr_threshold_high=120)
+    #
+    # detect_click(
+    #     class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/ChineseWhiteDolphins',
+    #     class_name='chinesewhite', snr_threshold_low=12, snr_threshold_high=120)
+    #
+    # detect_click(class_path='/media/fish/Elements/clickdata/ForCNNLSTM/XiamenData/NeomerisPhocaenoides',
+    #              class_name='Neomeris', snr_threshold_low=12, snr_threshold_high=120)
